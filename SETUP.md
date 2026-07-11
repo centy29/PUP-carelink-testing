@@ -18,10 +18,11 @@
 ## 🚀 Step 1: Download Project
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/pupbc-carelink.git
-cd pupbc-carelink
+git clone https://github.com/MarcLuna-git/PUPBC_Carelink_v3.git
+cd PUPBC_Carelink_v3
+Or download ZIP from GitHub then extract.
 
-Step 2: Setup Database
+🗄️ Step 2: Setup Database
 2.1 Open WAMP
 Start WAMP Server (icon should turn green)
 
@@ -30,17 +31,10 @@ Click WAMP icon → phpMyAdmin
 2.2 Create Database
 sql
 CREATE DATABASE pupbc_carelink_v3;
-
-2.3 Import SQL File
-Kung may backup file (database/pupbc_backup_xxxx.sql), import mo sa phpMyAdmin
-
-Or run migrations:
-
+2.3 Run Migrations
 bash
 cd backend
 php artisan migrate
-
-
 ⚙️ Step 3: Setup Backend
 bash
 cd backend
@@ -53,10 +47,7 @@ copy .env.example .env
 
 # Generate app key
 php artisan key:generate
-
-# Run backend
-php -S 0.0.0.0:8000 -t public
-Update .env file:
+Update .env file with your database settings:
 env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -64,8 +55,9 @@ DB_PORT=3306
 DB_DATABASE=pupbc_carelink_v3
 DB_USERNAME=root
 DB_PASSWORD=
-
-
+Run Backend:
+bash
+php -S 0.0.0.0:8000 -t public
 🎨 Step 4: Setup Frontend
 bash
 cd frontend
@@ -75,8 +67,6 @@ npm install
 
 # Run frontend
 npm run dev
-
-
 📱 Step 5: Access the App
 User	URL
 Laptop	http://localhost:3000
@@ -84,6 +74,7 @@ Phone (same WiFi)	http://192.168.1.X:3000
 🔑 Test Accounts
 Student
 text
+URL: http://localhost:3000/login
 Student ID: 2023-00057-BN-0
 Birthday: 09/24/2004
 Password: Marc@0924
@@ -92,8 +83,6 @@ text
 URL: http://localhost:3000/carelink-portal
 Email: pupbc.clinic@iskolarngbayan.pup.edu.ph
 Password: Clinic@2024
-
-
 📁 Project Structure
 text
 pupbc-carelink/
@@ -102,3 +91,12 @@ pupbc-carelink/
 ├── database/         # Backup scripts
 ├── docs/             # Documentation
 └── README.md
+
+
+❌ Common Issues
+Problem	Fix
+php not recognized	Add PHP to PATH or use full path
+MySQL connection refused	Make sure WAMP is running (green icon)
+Port 8000 already in use	Use: php -S 0.0.0.0:8001 -t public
+npm not recognized	Install Node.js from https://nodejs.org/
+composer not recognized	Install Composer from https://getcomposer.org/
