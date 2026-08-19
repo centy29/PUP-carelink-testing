@@ -41,6 +41,7 @@ class CareLinkSeeder extends Seeder
             'password' => bcrypt('password123'),
             'role' => 'student',
             'status' => 'active',
+            'birthday' => '2002-05-15',
             'email_verified_at' => now(),
         ]);
 
@@ -58,7 +59,7 @@ class CareLinkSeeder extends Seeder
         HealthProfile::create([
             'id' => (string) Str::uuid(),
             'user_id' => $user->id,
-            'allergies' => 'None',
+            'allergy_details' => 'None',
             'agree_privacy' => true,
             'agree_terms' => true,
             'completed_at' => now(),
