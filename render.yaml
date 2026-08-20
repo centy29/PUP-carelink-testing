@@ -1,0 +1,206 @@
+# Render Infrastructure as Code (IaC) Configuration
+# PUPBC CareLink - Full Stack Deployment
+#
+# This file defines the deployment configuration for both the Laravel backend
+# and the React/Vite frontend on Render.
+#
+# Usage:
+#   1. Push this file to your GitHub repo (centy29/PUP-carelink-testing)
+#   2. Create a new "Web Service" on Render and connect your GitHub repo
+#   3. Render will auto-detect render.yaml and provision both services
+#
+# After deployment, set the environment variables in the Render dashboard
+# (see the "Environment Variables" section below for the full list).
+
+services:
+  # ============================================
+  # BACKEND - Laravel API (PHP)
+  # ============================================
+  - type: web
+    name: carelink-backend
+    runtime: php
+    region: oregon
+    plan: free
+    rootDir: backend
+    build:
+      # Install PHP dependencies (no dev dependencies for production)
+      - composer install --no-dev --optimize-autoloader --no-interaction
+      # Cache config, routes, and events for performance
+      - php artisan config:cache
+      - php artisan route:cache
+      - php artisan event:cache
+      # Create storage symlink for file uploads
+      - php artisan storage:link
+      # Run database migrations (Supabase PostgreSQL)
+      - php artisan migrate --force
+    start:
+      # Render sets $PORT env var; serve Laravel on that port
+      - php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheck:
+      # Render will hit this endpoint to verify the service is healthy
+      path: /api/health
+      interval: 30
+    envVars:
+      # --- Application ---
+      - key: APP_NAME
+        value: "PUPBC CareLink"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        # IMPORTANT: Generate a secure key and set it in the Render dashboard
+        # Run: php artisan key:generate --show  (locally)
+        # Then paste the value here or set via Render dashboard
+        generateValue: true
+      - key: APP_URL
+        # Will be set to the Render service URL after first deploy
+        # e.g., https://carelink-backend.onrender.com
+        value: https://carelink-backend.onrender.com
+      - key: FRONTEND_URL
+        # Will be set to the Render frontend URL after first deploy
+        # e.g., https://carelink-frontend.onrender.com
+        value: https://carelink-frontend.onrender.com
+
+      # --- Database (Supabase PostgreSQL via Pooler) ---
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: aws-0-ap-northeast-1.pooler.supabase.com
+      - key: DB_PORT
+        value: 6543
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        # Set in Render dashboard (do not commit real credentials)
+        sync: false
+      - key: DB_PASSWORD
+        # Set in Render dashboard (do not commit real credentials)
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+
+      # --- Supabase ---
+      - key: SUPABASE_URL
+        value: https://rbrhhuisskfdienbkqao.supabase.co
+      - key: SUPABASE_KEY
+        # Set in Render dashboard
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        # Set in Render dashboard
+        sync: false
+
+      # --- JWT ---
+      - key: JWT_SECRET
+        # Generate with: php artisan jwt:secret
+        # Set in Render dashboard
+        sync: false
+      - key: JWT_TTL
+        value: 1440
+
+      # --- Mail (Gmail SMTP) ---
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USERNAME
+        value: pupbccarelink@gmail.com
+      - key: MAIL_PASSWORD
+        # Set in Render dashboard
+        sync: false
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        value: pupbccarelink@gmail.com
+      - key: MAIL_FROM_NAME
+        value: "PUPBC CareLink"
+
+      # --- Cache & Session ---
+      - key: CACHE_DRIVER
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: FILESYSTEM_DRIVER
+        value: local
+
+      # --- CORS / Sanctum ---
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: carelink-frontend.onrender.com
+
+      # --- Clinic Config ---
+      - key: SLOT_MAX
+        value: 10
+      - key: CLINIC_OPEN_TIME
+        value: 08:00
+      - key: CLINIC_CLOSE_TIME
+        value: 17:00
+      - key: LUNCH_START
+        value: 12:00
+      - key: LUNCH_END
+        value: 13:00
+
+      # --- Rate Limiting ---
+      - key: RATE_LIMIT_PER_MINUTE
+        value: 60
+      - key: KIOSK_RATE_LIMIT
+        value: 30
+      - key: AUTH_RATE_LIMIT
+        value: 10
+
+  # ============================================
+  # FRONTEND - React/Vite Static Site
+  # ============================================
+  - type: web
+    name: carelink-frontend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: frontend
+    build:
+      - npm install
+      - npm run build
+    # Vite builds to dist/ — Render serves it automatically
+    # The build output directory is dist/ by default
+    start:
+      - npx serve -s dist -l $PORT
+    envVars:
+      # The frontend needs to know the backend API URL
+      # Vite exposes env vars prefixed with VITE_ to the client
+      - key: VITE_API_URL
+        value: https://carelink-backend.onrender.com/api
+      - key: VITE_APP_NAME
+        value: "PUPBC CareLink"
+
+# ============================================
+# Environment Variables to Set in Render Dashboard
+# ============================================
+# After the first deploy, go to each service's "Environment" tab in the
+# Render dashboard and add the following sensitive variables:
+#
+# Backend (carelink-backend):
+#   - DB_USERNAME         (Supabase pooler username)
+#   - DB_PASSWORD         (Supabase pooler password)
+#   - SUPABASE_KEY        (Supabase service_role or anon key)
+#   - SUPABASE_ANON_KEY   (Supabase anon key)
+#   - JWT_SECRET          (Run: php artisan jwt:secret)
+#   - MAIL_PASSWORD       (Gmail app password)
+#
+# Frontend (carelink-frontend):
+#   - (No additional secrets needed if VITE_API_URL is set above)
+#
+# ============================================
+# Post-Deploy Steps
+# ============================================
+# 1. After first successful deploy, update APP_URL and FRONTEND_URL
+#    in the backend service to match the actual Render URLs.
+# 2. Update CORS allowed_origins in backend/config/cors.php if needed.
+# 3. Run database migrations:
+#    Render will auto-run migrations if you add a "render.yaml" migration
+#    hook, or you can run manually:
+#    php artisan migrate --force
+# 4. (Optional) Seed the database:
+#    php artisan db:seed --force

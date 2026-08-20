@@ -22,6 +22,9 @@ return [
         'http://127.0.0.1:3000',
         'http://192.168.1.3:3000',
         env('FRONTEND_URL', 'http://localhost:3000'),
+        // Render deployment domains
+        'https://carelink-frontend.onrender.com',
+        'https://carelink-backend.onrender.com',
     ],
 
     'allowed_origins_patterns' => [
