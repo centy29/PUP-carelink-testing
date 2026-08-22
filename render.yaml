@@ -2,7 +2,7 @@
 # PUPBC CareLink - Full Stack Deployment
 #
 # This file defines the deployment configuration for both the Laravel backend
-# and the React/Vite frontend on Render.
+# and the React/Vite frontend on Render using Docker.
 #
 # Usage:
 #   1. Push this file to your GitHub repo (centy29/PUP-carelink-testing)
@@ -14,16 +14,14 @@
 
 services:
   # ============================================
-  # BACKEND - Laravel API (PHP)
+  # BACKEND - Laravel API (PHP via Docker)
   # ============================================
   - type: web
     name: carelink-backend
-    runtime: php
     region: oregon
     plan: free
     rootDir: backend
-    buildCommand: composer install --no-dev --optimize-autoloader --no-interaction && php artisan config:cache && php artisan route:cache && php artisan event:cache && php artisan storage:link && php artisan migrate --force
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    # Render will use backend/Dockerfile for building
     healthCheckPath: /api/health
     envVars:
       # --- Application ---
@@ -125,16 +123,14 @@ services:
         value: "10"
 
   # ============================================
-  # FRONTEND - React/Vite Static Site
+  # FRONTEND - React/Vite (Node.js via Docker)
   # ============================================
   - type: web
     name: carelink-frontend
-    runtime: node
     region: oregon
     plan: free
     rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npx serve -s dist -l $PORT
+    # Render will use frontend/Dockerfile for building
     envVars:
       - key: VITE_API_URL
         value: https://carelink-backend.onrender.com/api
