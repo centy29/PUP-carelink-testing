@@ -22,14 +22,8 @@ services:
     region: oregon
     plan: free
     rootDir: backend
-    build:
-      - composer install --no-dev --optimize-autoloader --no-interaction
-      - php artisan config:cache
-      - php artisan route:cache
-      - php artisan event:cache
-      - php artisan storage:link
-      - php artisan migrate --force
-    start: php artisan serve --host=0.0.0.0 --port=$PORT
+    buildCommand: composer install --no-dev --optimize-autoloader --no-interaction && php artisan config:cache && php artisan route:cache && php artisan event:cache && php artisan storage:link && php artisan migrate --force
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     healthCheckPath: /api/health
     envVars:
       # --- Application ---
@@ -139,10 +133,8 @@ services:
     region: oregon
     plan: free
     rootDir: frontend
-    build:
-      - npm install
-      - npm run build
-    start: npx serve -s dist -l $PORT
+    buildCommand: npm install && npm run build
+    startCommand: npx serve -s dist -l $PORT
     envVars:
       - key: VITE_API_URL
         value: https://carelink-backend.onrender.com/api
