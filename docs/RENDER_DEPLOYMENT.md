@@ -62,6 +62,22 @@ Render will automatically:
 - Run database migrations
 - Start both services
 
+### Start Commands (if creating services manually)
+
+If you create the services manually (without `render.yaml`), use these **Start Commands**:
+
+| Service | Start Command |
+|---------|--------------|
+| `carelink-backend` | `php artisan serve --host=0.0.0.0 --port=$PORT` |
+| `carelink-frontend` | `npx serve -s dist -l $PORT` |
+
+And these **Build Commands**:
+
+| Service | Build Command |
+|---------|--------------|
+| `carelink-backend` | `composer install --no-dev --optimize-autoloader --no-interaction && php artisan config:cache && php artisan route:cache && php artisan event:cache && php artisan storage:link && php artisan migrate --force` |
+| `carelink-frontend` | `npm install && npm run build` |
+
 ---
 
 ## Step 3: Set Sensitive Environment Variables
