@@ -5,6 +5,8 @@
 FROM php:8.1-cli
 
 # Install system dependencies
+# Note: ctype, fileinfo, tokenizer, json, session, openssl are built-in to php:8.1-cli
+# We only need to install extensions that require compilation from source
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -17,7 +19,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd zip \
-    && docker-php-ext-install openssl xml ctype fileinfo tokenizer simplexml \
+    && docker-php-ext-install xml simplexml \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
