@@ -33,8 +33,12 @@ WORKDIR /var/www/html
 # Copy composer files first (for better layer caching)
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies (no dev dependencies, no scripts to avoid .env dependency)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+# Install PHP dependencies
+# --no-scripts: skip post-install scripts (no .env during build)
+# --ignore-platform-req=php: composer.lock was generated on PHP 7.x,
+#   but lcobucci/jwt 3.3.3 and tymon/jwt-auth 1.0.2 require php ^7.0
+#   which doesn't include PHP 8.1. The packages work fine on 8.1.
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts --ignore-platform-req=php
 
 # Copy application files
 COPY . .
