@@ -18,8 +18,16 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Vite bakes VITE_* variables into the JS bundle at BUILD time.
+# Declaring ARGs with the same names as Render environment variables
+# makes Render pass their dashboard values into this Docker build
+# automatically (otherwise they are undefined during `npm run build`).
+ARG VITE_API_URL
+ARG VITE_APP_NAME
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_APP_NAME=$VITE_APP_NAME
+
 # Build the application
-# VITE_API_URL is set at runtime via environment variable
 RUN npm run build
 
 # ============================================
