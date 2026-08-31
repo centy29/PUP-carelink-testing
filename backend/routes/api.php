@@ -83,7 +83,8 @@ Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
         try {
             $request->validate([
                 'email' => 'required|email',
-                'password' => 'required|string|min:6',
+                // min:5 to allow the plain-text test password "nurse"
+                'password' => 'required|string|min:5',
             ]);
 
             $authService = app(AuthService::class);

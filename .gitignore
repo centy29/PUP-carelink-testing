@@ -1,0 +1,9 @@
+# Local junk / debug artifacts (do not commit)
+$n
+OUT
+backend/diag.php
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini

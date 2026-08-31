@@ -66,7 +66,7 @@ class AuthService
 
         if ($user->status === 'archived') throw new \Exception('Account archived.');
         if ($user->status === 'inactive') throw new \Exception('Account inactive.');
-        if (!Hash::check($credentials['password'], $user->password)) throw new \Exception('Invalid password.');
+        if (!$this->verifyPassword($credentials['password'], $user->password)) throw new \Exception('Invalid password.');
         if (!$user->email_verified_at && $user->role === 'student') throw new \Exception('Please verify your email first.');
 
         $this->userRepository->recordLogin($user, request()->ip());
@@ -79,7 +79,7 @@ class AuthService
     public function adminLogin(string $email, string $password): array
     {
         $user = User::where('email', $email)->whereIn('role', ['admin', 'nurse'])->first();
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (!$user || !$this->verifyPassword($password, $user->password)) {
             throw new \Exception('Invalid credentials.');
         }
 
@@ -182,6 +182,25 @@ class AuthService
     public function getAuthenticatedUser()
     {
         return auth()->user()->load('profile', 'qrCode');
+    }
+
+    /**
+     * Verify a login password against the stored value.
+     *
+     * TESTING SETUP: the seeded test accounts store their passwords as
+     * PLAIN TEXT in the database so they are readable when inspected.
+     * This check therefore accepts:
+     *   1. an exact plain-text match (seeded test accounts), and
+     *   2. a bcrypt hash match (real accounts registered via the app,
+     *      which are hashed by register()/resetPassword()).
+     *
+     * FOR PRODUCTION: delete the plain-text comparison below and revert
+     * the seeder to Hash::make('...') so only hashed passwords work.
+     */
+    protected function verifyPassword(string $input, string $stored): bool
+    {
+        if ($input === $stored) return true; // plain text match (testing only)
+        return Hash::check($input, $stored); // bcrypt hash match (normal accounts)
     }
 
     protected function sendOTP(User $user): void

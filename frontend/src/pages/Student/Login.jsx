@@ -21,7 +21,7 @@ const Login = () => {
     else if (!idRegex.test(form.student_id)) newErrors.student_id = 'Format: 2016-00000-BN-0 or BN-1';
     if (!form.birthday) newErrors.birthday = 'Birthday is required';
     if (!form.password) newErrors.password = 'Password is required';
-    else if (form.password.length < 8) newErrors.password = 'Minimum 8 characters';
+    else if (form.password.length < 5) newErrors.password = 'Minimum 5 characters';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

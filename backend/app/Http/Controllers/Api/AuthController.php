@@ -149,13 +149,20 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Login student
+        /**
+     * Login a user (student, nurse or admin)
+     * - students authenticate with student_id + birthday + password
+     * - nurses/admins authenticate with email + password
      */
     public function login(Request $request): JsonResponse
     {
         try {
-            $result = $this->authService->login($request->all());
+            $data = $request->all();
+
+            // No student_id => treat as nurse/admin login
+            $result = isset($data['student_id'])
+                ? $this->authService->login($data)
+                : $this->authService->adminLogin($data['email'], $data['password']);
 
             return response()->json([
                 'success' => true,

@@ -7,83 +7,111 @@ use App\Models\User;
 use App\Models\StudentProfile;
 use App\Models\HealthProfile;
 use App\Models\Appointment;
-use App\Models\Consultation;
-use App\Models\Notification;
 use App\Models\QrCode;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+/**
+ * Creates / updates the default test accounts used for logging into the system.
+ *
+ *  - NURSE   : nurse@pupbc.edu.ph   / nurse         (Nurse Login page — email + password)
+ *  - STUDENT : 2021-00001-BN-0      / student       (Student Login page — student ID + birthday + password)
+ *
+ * Idempotent: safe to run multiple times (`php artisan db:seed --force`).
+ * Existing accounts are updated, not duplicated.
+ *
+ * TESTING SETUP: passwords are stored as PLAIN TEXT (not hashed) so they are
+ * readable when viewing the database. AuthService::verifyPassword() accepts
+ * plain text for now. For production: change back to Hash::make('...') here
+ * and remove the plain-text comparison in AuthService::verifyPassword().
+ */
 class CareLinkSeeder extends Seeder
 {
     public function run()
     {
-        // CREATE NURSE ACCOUNT
-        $nurse = User::create([
-            'id' => (string) Str::uuid(),
-            'first_name' => 'Jane',
-            'last_name' => 'Doe',
-            'email' => 'nurse@pupbc.edu.ph',
-            'password' => bcrypt('password123'),
-            'role' => 'nurse',
-            'status' => 'active',
-            'email_verified_at' => now(),
-        ]);
+        // ============================================
+        // 1. NURSE ACCOUNT (logs in via Nurse Login page)
+        // ============================================
+        $nurse = User::updateOrCreate(
+            ['email' => 'nurse@pupbc.edu.ph'],
+            [
+                'first_name' => 'Jane',
+                'last_name' => 'Doe',
+                'password' => 'nurse', // PLAIN TEXT — testing only
+                'role' => 'nurse',
+                'status' => 'active',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        echo "Nurse created: nurse@pupbc.edu.ph / password123\n";
+        $this->command->info('Nurse account ready: nurse@pupbc.edu.ph / nurse');
 
-        // CREATE TEST STUDENT
-        $user = User::create([
-            'id' => (string) Str::uuid(),
-            'student_id' => '2021-00001-BN-0',
-            'first_name' => 'Juan',
-            'last_name' => 'Dela Cruz',
-            'email' => 'juan@example.com',
-            'password' => bcrypt('password123'),
-            'role' => 'student',
-            'status' => 'active',
-            'birthday' => '2002-05-15',
-            'email_verified_at' => now(),
-        ]);
+        // ============================================
+        // 2. STUDENT ACCOUNT (logs in via Student Login page)
+        // ============================================
+        $user = User::updateOrCreate(
+            ['student_id' => '2021-00001-BN-0'],
+            [
+                'first_name' => 'Juan',
+                'last_name' => 'Dela Cruz',
+                'email' => 'juan@example.com',
+                'password' => 'student', // PLAIN TEXT — testing only
+                'role' => 'student',
+                'status' => 'active',
+                'birthday' => '2002-05-15',
+                'email_verified_at' => now(),
+            ]
+        );
 
-        StudentProfile::create([
-            'id' => (string) Str::uuid(),
-            'user_id' => $user->id,
-            'course' => 'BSIT',
-            'year' => '3',
-            'section' => 'A',
-            'birthday' => '2002-05-15',
-            'gender' => 'male',
-            'mobile_number' => '09123456789',
-        ]);
+        // Student profile (course / year / section etc.)
+        StudentProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'course' => 'BSIT',
+                'year' => '3',
+                'section' => 'A',
+                'birthday' => '2002-05-15',
+                'gender' => 'male',
+                'mobile_number' => '09123456789',
+            ]
+        );
 
-        HealthProfile::create([
-            'id' => (string) Str::uuid(),
-            'user_id' => $user->id,
-            'allergy_details' => 'None',
-            'agree_privacy' => true,
-            'agree_terms' => true,
-            'completed_at' => now(),
-        ]);
+        // Health profile — must be completed so login redirects to the dashboard
+        HealthProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'allergy_details' => 'None',
+                'agree_privacy' => true,
+                'agree_terms' => true,
+                'completed_at' => now(),
+            ]
+        );
 
-        QrCode::create([
-            'id' => (string) Str::uuid(),
-            'user_id' => $user->id,
-            'qr_code_hash' => (string) Str::uuid(),
-            'is_active' => true,
-        ]);
+        // QR code used by the kiosk check-in system
+        $qr = QrCode::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'qr_code_hash' => (string) Str::uuid(),
+                'is_active' => true,
+            ]
+        );
 
-        Appointment::create([
-            'id' => (string) Str::uuid(),
-            'user_id' => $user->id,
-            'service' => 'General Checkup',
-            'appointment_date' => Carbon::tomorrow(),
-            'time_slot' => '9:00 AM - 10:00 AM',
-            'concern' => 'Regular checkup',
-            'status' => 'pending',
-            'reference_number' => 'APT-' . strtoupper(Str::random(10)),
-        ]);
+        // Sample appointment — only created once (first run)
+        if ($user->appointments()->count() === 0) {
+            Appointment::create([
+                'id' => (string) Str::uuid(),
+                'user_id' => $user->id,
+                'service' => 'General Checkup',
+                'appointment_date' => Carbon::tomorrow(),
+                'time_slot' => '9:00 AM - 10:00 AM',
+                'concern' => 'Regular checkup',
+                'status' => 'pending',
+                'reference_number' => 'APT-' . strtoupper(Str::random(10)),
+            ]);
+        }
 
-        echo "Student created: juan@example.com / password123\n";
-        echo "Seeding complete!\n";
+        $this->command->info('Student account ready: 2021-00001-BN-0 / birthday 2002-05-15 / student');
+        $this->command->info('Seeding complete!');
     }
 }
