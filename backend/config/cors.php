@@ -22,14 +22,21 @@ return [
         'http://127.0.0.1:3000',
         'http://192.168.1.3:3000',
         env('FRONTEND_URL', 'http://localhost:3000'),
-        // Render deployment domains
+        // Render deployment domains (live services)
+        'https://pup-carelink-testing-frontend.onrender.com',
+        'https://pup-carelink-testing-backend.onrender.com',
         'https://carelink-frontend.onrender.com',
         'https://carelink-backend.onrender.com',
     ],
 
     'allowed_origins_patterns' => [
+        // NOTE: these patterns are passed STRAIGHT to preg_match() by
+        // asm89/stack-cors, so they MUST include regex delimiters (#...#).
         // Allow any local network IP during development
-        'http://192\.168\.\d+\.\d+:3000',
+        '#^http://192\.168\.\d+\.\d+:3000$#i',
+        // Allow any *.onrender.com subdomain (Render may append random
+        // suffixes on name collisions; keeps CORS working across URL changes)
+        '#^https://[a-z0-9-]+\.onrender\.com$#i',
     ],
 
     'allowed_headers' => [

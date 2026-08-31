@@ -1,9 +1,17 @@
 import axios from 'axios';
 
 const getApiUrl = () => {
-  // Production: use VITE_API_URL env var (set by Render/Vite)
+  // Production: use VITE_API_URL env var (baked in at build time by Vite —
+  // see frontend/.env.production and the ARG/ENV lines in frontend/Dockerfile)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
+  }
+
+  // Production fallback: if the build did not receive VITE_API_URL, point
+  // directly at the live Render backend instead of falling through to the
+  // local-dev resolution below (which would break when deployed on Render).
+  if (import.meta.env.PROD) {
+    return 'https://pup-carelink-testing-backend.onrender.com/api';
   }
 
   // Local development: dynamically resolve based on hostname
@@ -24,7 +32,9 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  timeout: 5000, // Reduced from 15000 to 5000 (5 seconds)
+  // Render's free tier spins the backend down when idle; the first request
+  // after that can take 30-60s to wake the service up, so allow enough time.
+  timeout: 60000,
 });
 
 api.interceptors.request.use(

@@ -17,7 +17,7 @@ services:
   # BACKEND - Laravel API (PHP via Docker)
   # ============================================
   - type: web
-    name: carelink-backend
+    name: pup-carelink-testing-backend
     region: oregon
     plan: free
     rootDir: backend
@@ -36,9 +36,9 @@ services:
         # Set this value in the Render dashboard after first deploy
         sync: false
       - key: APP_URL
-        value: https://carelink-backend.onrender.com
+        value: https://pup-carelink-testing-backend.onrender.com
       - key: FRONTEND_URL
-        value: https://carelink-frontend.onrender.com
+        value: https://pup-carelink-testing-frontend.onrender.com
 
       # --- Database (Supabase PostgreSQL via Pooler) ---
       - key: DB_CONNECTION
@@ -100,7 +100,7 @@ services:
 
       # --- CORS / Sanctum ---
       - key: SANCTUM_STATEFUL_DOMAINS
-        value: carelink-frontend.onrender.com
+        value: pup-carelink-testing-frontend.onrender.com
 
       # --- Clinic Config ---
       - key: SLOT_MAX
@@ -126,14 +126,14 @@ services:
   # FRONTEND - React/Vite (Node.js via Docker)
   # ============================================
   - type: web
-    name: carelink-frontend
+    name: pup-carelink-testing-frontend
     region: oregon
     plan: free
     rootDir: frontend
     # Render will use frontend/Dockerfile for building
     envVars:
       - key: VITE_API_URL
-        value: https://carelink-backend.onrender.com/api
+        value: https://pup-carelink-testing-backend.onrender.com/api
       - key: VITE_APP_NAME
         value: "PUPBC CareLink"
 
