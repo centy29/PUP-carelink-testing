@@ -63,5 +63,6 @@ RUN php artisan storage:link 2>/dev/null || true
 # Expose the port (Render sets $PORT env var)
 EXPOSE $PORT
 
-# Run database migrations on startup, then serve the application
-CMD ["sh", "-c", "php artisan migrate --force 2>/dev/null; php artisan serve --host=0.0.0.0 --port=$PORT"]
+# Run database migrations + seed demo accounts on startup, then serve.
+# (CareLinkSeeder is idempotent: updateOrCreate — safe on every deploy.)
+CMD ["sh", "-c", "php artisan migrate --force 2>/dev/null; php artisan db:seed --force 2>/dev/null; php artisan serve --host=0.0.0.0 --port=$PORT"]
