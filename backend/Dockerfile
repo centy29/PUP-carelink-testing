@@ -53,8 +53,9 @@ RUN mkdir -p storage/framework/{sessions,views,cache,data} \
 # (Render will override with real env vars at runtime)
 RUN cp .env.example .env 2>/dev/null || true
 
-# Generate APP_KEY and run package discovery
-RUN php artisan key:generate --force 2>/dev/null || true
+# Generate APP_KEY only when missing (keeps the baked-in key stable across
+# builds so sessions/tokens survive redeploys) and run package discovery
+RUN php artisan key:generate 2>/dev/null || true
 RUN php artisan package:discover --ansi 2>/dev/null || true
 
 # Generate storage symlink
