@@ -28,12 +28,25 @@ use App\Services\AuthService;
 // HEALTH CHECK
 // ============================================
 Route::get('/health', function () {
+    // Database connectivity probe — always returns 200 so the Render
+    // health check never fails while the DB is still being configured.
+    $database = 'down';
+    $databaseError = null;
+    try {
+        \Illuminate\Support\Facades\DB::select('select 1');
+        $database = 'connected';
+    } catch (\Throwable $e) {
+        $databaseError = $e->getMessage();
+    }
+
     return response()->json([
         'success' => true,
         'status' => 'healthy',
         'version' => '1.0.0',
         'timestamp' => now()->toDateTimeString(),
         'environment' => app()->environment(),
+        'database' => $database,
+        'database_error' => $databaseError,
     ]);
 });
 
