@@ -159,7 +159,7 @@ class KioskController extends Controller
         $queue = AppointmentCheckin::with('user')
             ->whereDate('created_at', now())
             ->where('status', '!=', 'completed')
-            ->orderByRaw("FIELD(queue_type, 'priority', 'regular')")
+            ->orderByRaw("CASE WHEN queue_type = 'priority' THEN 0 ELSE 1 END")
             ->orderBy('check_in_time')
             ->get();
 
@@ -192,7 +192,7 @@ class KioskController extends Controller
         $next = AppointmentCheckin::with('user')
             ->whereDate('created_at', now())
             ->where('status', 'waiting')
-            ->orderByRaw("FIELD(queue_type, 'priority', 'regular')")
+            ->orderByRaw("CASE WHEN queue_type = 'priority' THEN 0 ELSE 1 END")
             ->orderBy('check_in_time')
             ->first();
 
