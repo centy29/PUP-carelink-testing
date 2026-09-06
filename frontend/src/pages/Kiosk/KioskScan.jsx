@@ -15,6 +15,8 @@ const KioskScan = ({ onStudentFound, onBack, method: initialMethod }) => {
   const [scanTimeout, setScanTimeout] = useState(false);
   const scannerRef = useRef(null);
   const timeoutRef = useRef(null);
+  const isScanningRef = useRef(false); // Prevent multiple simultaneous scans
+  const scanCooldownRef = useRef(false); // Cooldown after successful scan
   const qrRegionId = 'qr-reader-region';
 
   // Cleanup on unmount
@@ -41,6 +43,8 @@ const KioskScan = ({ onStudentFound, onBack, method: initialMethod }) => {
     setError('');
     setScanTimeout(false);
     setCameraReady(false);
+    isScanningRef.current = false;
+    scanCooldownRef.current = false;
 
     try {
       // Stop any existing scanner first
@@ -120,34 +124,67 @@ const KioskScan = ({ onStudentFound, onBack, method: initialMethod }) => {
   };
 
   const handleQRScanned = async (decodedText) => {
-    await stopQrScanner();
-    setLoading(true);
-    setError('');
-
+    // Prevent multiple simultaneous scans
+    if (isScanningRef.current || scanCooldownRef.current) {
+      return;
+    }
+    
+    isScanningRef.current = true;
+    
     try {
+      await stopQrScanner();
+      setLoading(true);
+      setError('');
+
+      console.log('QR Scanned:', decodedText); // Debug log
+
       let studentIdFromQR = decodedText.trim();
+      let qrHash = null;
       
       // Try to extract student ID from JSON
       if (decodedText.includes('student_id') || decodedText.startsWith('{')) {
         try {
           const data = JSON.parse(decodedText);
           studentIdFromQR = data.student_id || data.id || data.studentId || decodedText;
+          qrHash = data.hash || data.qr_hash || null;
         } catch (e) {
           // Not JSON, use raw text
         }
+      } else {
+        // Not JSON - might be a raw hash
+        if (decodedText.includes('PUPBC-') || decodedText.length > 20) {
+          qrHash = decodedText;
+        }
       }
 
-      const response = await api.post('/kiosk/lookup', { student_id: studentIdFromQR });
+      console.log('Extracted student_id:', studentIdFromQR);
+      console.log('Extracted hash:', qrHash);
+
+      // Try lookup with student_id first, then with hash
+      const payload = { student_id: studentIdFromQR };
+      if (qrHash && qrHash !== studentIdFromQR) {
+        payload.qr_hash = qrHash;
+      }
+
+      const response = await api.post('/kiosk/lookup', payload);
+      
       if (response.data.success) {
+        scanCooldownRef.current = true;
         setSuccess(true);
         setTimeout(() => onStudentFound(response.data.data), 800);
       } else {
-        throw new Error('Student not found');
+        throw new Error(response.data.message || 'QR not recognized');
       }
     } catch (err) {
-      setError('QR not recognized. Please try manual entry.');
+      console.error('QR lookup error:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'QR not recognized. Please try manual entry.';
+      setError(errorMsg);
+      
+      // Reset scanning state
+      isScanningRef.current = false;
+      
       // Auto switch to manual after error
-      setTimeout(() => setMethodTab('manual'), 1500);
+      setTimeout(() => setMethodTab('manual'), 2000);
     } finally {
       setLoading(false);
     }
@@ -158,6 +195,8 @@ const KioskScan = ({ onStudentFound, onBack, method: initialMethod }) => {
     setError('');
     setScanTimeout(false);
     setCameraReady(false);
+    isScanningRef.current = false;
+    scanCooldownRef.current = false;
     setTimeout(() => startQrScanner(), 500);
   };
 
@@ -165,27 +204,40 @@ const KioskScan = ({ onStudentFound, onBack, method: initialMethod }) => {
     stopQrScanner();
     setMethodTab('manual');
     setError('');
+    isScanningRef.current = false;
+    scanCooldownRef.current = false;
   };
 
   const handleLookup = async (e) => {
     e.preventDefault();
     const trimmed = studentId.trim().toUpperCase();
-    if (!trimmed) { setError('Please enter your Student ID'); return; }
-    if (!/^\d{4}-\d{5}-BN-[01]$/i.test(trimmed)) { 
-      setError('Invalid format. Use: 2023-00000-BN-0'); 
-      return; 
+    
+    if (!trimmed || trimmed.length < 5) {
+      setError('Please enter a valid Student ID (at least 5 characters)');
+      return;
     }
 
-    setLoading(true); setError('');
+    setLoading(true);
+    setError('');
+
     try {
+      console.log('Manual lookup:', trimmed); // Debug log
+      
       const response = await api.post('/kiosk/lookup', { student_id: trimmed });
+      
       if (response.data.success) {
         setSuccess(true);
         setTimeout(() => onStudentFound(response.data.data), 800);
+      } else {
+        throw new Error(response.data.message || 'Student not found');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Student not found.');
-    } finally { setLoading(false); }
+      console.error('Manual lookup error:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Student not found. Please check your Student ID.';
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

@@ -17,24 +17,40 @@ class KioskController extends Controller
     public function lookup(Request $request)
     {
         $request->validate([
-            'student_id' => 'required|string'
+            'student_id' => 'required|string',
+            'qr_hash' => 'nullable|string',
         ]);
 
         $identifier = trim((string) $request->student_id);
+        $qrHash = $request->input('qr_hash') ? trim((string) $request->input('qr_hash')) : null;
 
+        // Debug log
+        \Log::info('Kiosk lookup', [
+            'identifier' => $identifier,
+            'qr_hash' => $qrHash,
+        ]);
+
+        // Try exact match first
         $user = User::where('student_id', $identifier)
             ->orWhereHas('qrCode', function ($q) use ($identifier) {
                 $q->where('qr_code_hash', $identifier)->where('is_active', true);
-            })
-            ->with(['studentProfile', 'healthProfile', 'qrCode'])
-            ->first();
+            });
+
+        // If qr_hash is provided and different from identifier, also search by qr_hash
+        if ($qrHash && $qrHash !== $identifier) {
+            $user = $user->orWhereHas('qrCode', function ($q) use ($qrHash) {
+                $q->where('qr_code_hash', $qrHash)->where('is_active', true);
+            });
+        }
+
+        $user = $user->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
 
         // Fallback: tolerate small formatting differences
         // (lower/uppercase, missing/extra dashes or spaces)
         if (!$user && strlen($identifier) >= 5) {
             $normalized = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($identifier));
 
-            $user = User::select('users.*')
+            $query = User::select('users.*')
                 ->leftJoin('qr_codes', 'qr_codes.user_id', '=', 'users.id')
                 ->where(function ($query) use ($normalized) {
                     $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(users.student_id), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
@@ -42,12 +58,34 @@ class KioskController extends Controller
                             $q2->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
                                 ->where('qr_codes.is_active', true);
                         });
-                })
-                ->with(['studentProfile', 'healthProfile', 'qrCode'])
-                ->first();
+                });
+
+            // Also search by normalized qr_hash if provided
+            if ($qrHash) {
+                $normalizedQrHash = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($qrHash));
+                $query = User::select('users.*')
+                    ->leftJoin('qr_codes', 'qr_codes.user_id', '=', 'users.id')
+                    ->where(function ($query) use ($normalized, $normalizedQrHash) {
+                        $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(users.student_id), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
+                            ->orWhere(function ($q2) use ($normalized) {
+                                $q2->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
+                                    ->where('qr_codes.is_active', true);
+                            })
+                            ->orWhere(function ($q3) use ($normalizedQrHash) {
+                                $q3->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalizedQrHash])
+                                    ->where('qr_codes.is_active', true);
+                            });
+                    });
+            }
+
+            $user = $query->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
         }
 
         if (!$user) {
+            \Log::info('Kiosk lookup: Student not found', [
+                'identifier' => $identifier,
+                'qr_hash' => $qrHash,
+            ]);
             return response()->json([
                 'success' => false, 
                 'message' => 'Student not found. Please check your Student ID or QR code.'
