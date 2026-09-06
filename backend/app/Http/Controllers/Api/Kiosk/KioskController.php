@@ -16,103 +16,133 @@ class KioskController extends Controller
      */
     public function lookup(Request $request)
     {
-        $request->validate([
-            'student_id' => 'required|string',
-            'qr_hash' => 'nullable|string',
-        ]);
+        try {
+            $request->validate([
+                'student_id' => 'required|string',
+                'qr_hash' => 'nullable|string',
+            ]);
 
-        $identifier = trim((string) $request->student_id);
-        $qrHash = $request->input('qr_hash') ? trim((string) $request->input('qr_hash')) : null;
+            $identifier = trim((string) $request->student_id);
+            $qrHash = $request->input('qr_hash') ? trim((string) $request->input('qr_hash')) : null;
 
-        // Debug log
-        \Log::info('Kiosk lookup', [
-            'identifier' => $identifier,
-            'qr_hash' => $qrHash,
-        ]);
-
-        // Try exact match first
-        $user = User::where('student_id', $identifier)
-            ->orWhereHas('qrCode', function ($q) use ($identifier) {
-                $q->where('qr_code_hash', $identifier)->where('is_active', true);
-            });
-
-        // If qr_hash is provided and different from identifier, also search by qr_hash
-        if ($qrHash && $qrHash !== $identifier) {
-            $user = $user->orWhereHas('qrCode', function ($q) use ($qrHash) {
-                $q->where('qr_code_hash', $qrHash)->where('is_active', true);
-            });
-        }
-
-        $user = $user->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
-
-        // Fallback: tolerate small formatting differences
-        // (lower/uppercase, missing/extra dashes or spaces)
-        if (!$user && strlen($identifier) >= 5) {
-            $normalized = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($identifier));
-
-            $query = User::select('users.*')
-                ->leftJoin('qr_codes', 'qr_codes.user_id', '=', 'users.id')
-                ->where(function ($query) use ($normalized) {
-                    $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(users.student_id), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
-                        ->orWhere(function ($q2) use ($normalized) {
-                            $q2->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
-                                ->where('qr_codes.is_active', true);
-                        });
-                });
-
-            // Also search by normalized qr_hash if provided
-            if ($qrHash) {
-                $normalizedQrHash = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($qrHash));
-                $query = User::select('users.*')
-                    ->leftJoin('qr_codes', 'qr_codes.user_id', '=', 'users.id')
-                    ->where(function ($query) use ($normalized, $normalizedQrHash) {
-                        $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(users.student_id), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
-                            ->orWhere(function ($q2) use ($normalized) {
-                                $q2->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
-                                    ->where('qr_codes.is_active', true);
-                            })
-                            ->orWhere(function ($q3) use ($normalizedQrHash) {
-                                $q3->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalizedQrHash])
-                                    ->where('qr_codes.is_active', true);
-                            });
-                    });
-            }
-
-            $user = $query->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
-        }
-
-        if (!$user) {
-            \Log::info('Kiosk lookup: Student not found', [
+            // Debug log
+            \Log::info('Kiosk lookup request', [
                 'identifier' => $identifier,
                 'qr_hash' => $qrHash,
             ]);
+
+            $user = null;
+
+            // 1. Try exact match by student_id
+            $user = User::where('student_id', $identifier)
+                ->with(['studentProfile', 'healthProfile', 'qrCode'])
+                ->first();
+
+            // 2. If not found, try by identifier as qr_code_hash
+            if (!$user) {
+                $user = User::whereHas('qrCode', function ($q) use ($identifier) {
+                    $q->where('qr_code_hash', $identifier)->where('is_active', true);
+                })->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
+            }
+
+            // 3. If qr_hash is provided and different, try by qr_hash
+            if (!$user && $qrHash && $qrHash !== $identifier) {
+                $user = User::whereHas('qrCode', function ($q) use ($qrHash) {
+                    $q->where('qr_code_hash', $qrHash)->where('is_active', true);
+                })->with(['studentProfile', 'healthProfile', 'qrCode'])->first();
+            }
+
+            // 4. Fallback: tolerate formatting differences (case, dashes, spaces)
+            if (!$user && strlen($identifier) >= 5) {
+                $normalized = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($identifier));
+                
+                // Get all users and their qr codes, then filter in PHP
+                $users = User::with(['studentProfile', 'healthProfile', 'qrCode'])->get();
+                
+                foreach ($users as $potentialUser) {
+                    // Check normalized student_id
+                    $normalizedStudentId = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($potentialUser->student_id));
+                    if ($normalizedStudentId === $normalized) {
+                        $user = $potentialUser;
+                        break;
+                    }
+                    
+                    // Check normalized qr_code_hash
+                    if ($potentialUser->qrCode && $potentialUser->qrCode->is_active) {
+                        $normalizedQrHash = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($potentialUser->qrCode->qr_code_hash));
+                        if ($normalizedQrHash === $normalized) {
+                            $user = $potentialUser;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 5. If still not found and qr_hash provided, try normalized qr_hash
+            if (!$user && $qrHash) {
+                $normalizedQrHash = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($qrHash));
+                $users = User::with(['studentProfile', 'healthProfile', 'qrCode'])->get();
+                
+                foreach ($users as $potentialUser) {
+                    if ($potentialUser->qrCode && $potentialUser->qrCode->is_active) {
+                        $normalizedDbHash = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($potentialUser->qrCode->qr_code_hash));
+                        if ($normalizedDbHash === $normalizedQrHash) {
+                            $user = $potentialUser;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!$user) {
+                \Log::info('Kiosk lookup: Student not found', [
+                    'identifier' => $identifier,
+                    'qr_hash' => $qrHash,
+                ]);
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Student not found. Please check your Student ID or QR code.'
+                ], 404);
+            }
+
+            // Find today's appointment
+            $appointment = Appointment::where('user_id', $user->id)
+                ->whereDate('appointment_date', now())
+                ->where('status', 'approved')
+                ->first();
+
+            // Find active check-in
+            $activeCheckin = AppointmentCheckin::where('user_id', $user->id)
+                ->whereDate('created_at', now())
+                ->where('status', '!=', 'completed')
+                ->first();
+
+            \Log::info('Kiosk lookup: Student found', [
+                'user_id' => $user->id,
+                'student_id' => $user->student_id,
+            ]);
+
             return response()->json([
-                'success' => false, 
-                'message' => 'Student not found. Please check your Student ID or QR code.'
-            ], 404);
+                'success' => true,
+                'data' => [
+                    'user' => $user,
+                    'appointment' => $appointment,
+                    'has_active_checkin' => !is_null($activeCheckin),
+                    'active_checkin' => $activeCheckin,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Kiosk lookup error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all(),
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Find today's appointment
-        $appointment = Appointment::where('user_id', $user->id)
-            ->whereDate('appointment_date', now())
-            ->where('status', 'approved')
-            ->first();
-
-        // Find active check-in
-        $activeCheckin = AppointmentCheckin::where('user_id', $user->id)
-            ->whereDate('created_at', now())
-            ->where('status', '!=', 'completed')
-            ->first();
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'user' => $user,
-                'appointment' => $appointment,
-                'has_active_checkin' => !is_null($activeCheckin),
-                'active_checkin' => $activeCheckin,
-            ]
-        ]);
     }
 
     /**
