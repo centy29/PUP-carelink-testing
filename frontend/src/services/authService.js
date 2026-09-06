@@ -66,18 +66,6 @@ const authService = {
     return localStorage.getItem('token');
   },
 
-  // Verify email OTP
-  async verifyEmail(student_id, otp) {
-    const response = await api.post('/auth/verify-email', { student_id, otp });
-    return response.data;
-  },
-
-  // Resend OTP
-  async resendOTP(student_id) {
-    const response = await api.post('/auth/resend-otp', { student_id });
-    return response.data;
-  },
-
   // Forgot password
   async forgotPassword(email) {
     const response = await api.post('/auth/forgot-password', { email });

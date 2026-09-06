@@ -31,6 +31,15 @@ const NurseAnnouncements = () => {
 
   useEffect(() => { fetchAnnouncements(); }, []);
 
+  const getErrorDetail = (err, fallback) => {
+    const res = err?.response;
+    if (res?.data?.errors) {
+      const first = Object.values(res.data.errors)[0];
+      if (Array.isArray(first) && first.length) return first[0];
+    }
+    return res?.data?.message || err?.message || fallback;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) return;
@@ -39,12 +48,14 @@ const NurseAnnouncements = () => {
       const token = localStorage.getItem('token');
       if (editingId) {
         await api.put(`/nurse/announcements/${editingId}`, form, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 120000
         });
         setMessage('Announcement updated!');
       } else {
         await api.post('/nurse/announcements', form, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 120000
         });
         setMessage('Announcement posted!');
       }
@@ -54,7 +65,8 @@ const NurseAnnouncements = () => {
       fetchAnnouncements();
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
-      setMessage('Failed to save announcement.');
+      console.error('Save announcement failed:', err?.response?.status, err?.response?.data || err);
+      setMessage(`Failed to save announcement. ${getErrorDetail(err, 'Please try again.')}`);
     }
   };
 

@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 class KioskController extends Controller
 {
     /**
-     * Look up student by Student ID
+     * Look up student by Student ID or QR hash
      */
     public function lookup(Request $request)
     {
@@ -20,14 +20,37 @@ class KioskController extends Controller
             'student_id' => 'required|string'
         ]);
 
-        $user = User::where('student_id', $request->student_id)
+        $identifier = trim((string) $request->student_id);
+
+        $user = User::where('student_id', $identifier)
+            ->orWhereHas('qrCode', function ($q) use ($identifier) {
+                $q->where('qr_code_hash', $identifier)->where('is_active', true);
+            })
             ->with(['studentProfile', 'healthProfile', 'qrCode'])
             ->first();
+
+        // Fallback: tolerate small formatting differences
+        // (lower/uppercase, missing/extra dashes or spaces)
+        if (!$user && strlen($identifier) >= 5) {
+            $normalized = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($identifier));
+
+            $user = User::select('users.*')
+                ->leftJoin('qr_codes', 'qr_codes.user_id', '=', 'users.id')
+                ->where(function ($query) use ($normalized) {
+                    $query->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(users.student_id), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
+                        ->orWhere(function ($q2) use ($normalized) {
+                            $q2->whereRaw("REPLACE(REPLACE(REPLACE(UPPER(qr_codes.qr_code_hash), '-', ''), ' ', ''), '.', '') = ?", [$normalized])
+                                ->where('qr_codes.is_active', true);
+                        });
+                })
+                ->with(['studentProfile', 'healthProfile', 'qrCode'])
+                ->first();
+        }
 
         if (!$user) {
             return response()->json([
                 'success' => false, 
-                'message' => 'Student not found.'
+                'message' => 'Student not found. Please check your Student ID or QR code.'
             ], 404);
         }
 

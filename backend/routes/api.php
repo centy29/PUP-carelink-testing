@@ -67,8 +67,9 @@ Route::get('/test', function () {
 // ============================================
 
 // KIOSK ROUTES (Public - no auth needed for tablet kiosk)
-// Rate limited: 30 requests per minute for kiosk
-Route::prefix('kiosk')->middleware('throttle:30,1')->group(function () {
+// Rate limited: 120 requests per minute for kiosk (raised so a busy clinic
+// with many students scanning QR codes doesn't get locked out)
+Route::prefix('kiosk')->middleware('throttle:120,1')->group(function () {
     Route::post('/lookup', [KioskController::class, 'lookup']);
     Route::post('/checkin', [KioskController::class, 'checkin']);
     Route::get('/queue', [KioskController::class, 'todayQueue']);
@@ -82,12 +83,8 @@ Route::prefix('kiosk')->middleware('throttle:30,1')->group(function () {
 // Authentication Routes
 // Rate limited: 10 requests per minute (login/register)
 Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
-    Route::post('/send-otp', [AuthController::class, 'sendOTP']);
-    Route::post('/verify-otp', [AuthController::class, 'verifyOTP']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
-    Route::post('/resend-otp', [AuthController::class, 'resendOTP']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     
