@@ -111,10 +111,10 @@ class KioskController extends Controller
                 ->where('status', 'approved')
                 ->first();
 
-            // Find active check-in
+            // Find active check-in (use checkin_status column)
             $activeCheckin = AppointmentCheckin::where('user_id', $user->id)
                 ->whereDate('created_at', now())
-                ->where('status', '!=', 'completed')
+                ->where('checkin_status', '!=', 'completed')
                 ->first();
 
             \Log::info('Kiosk lookup: Student found', [
@@ -170,7 +170,7 @@ class KioskController extends Controller
         // Check if already checked in today
         $existingCheckin = AppointmentCheckin::where('user_id', $user->id)
             ->whereDate('created_at', now())
-            ->where('status', '!=', 'completed')
+            ->where('checkin_status', '!=', 'completed')
             ->first();
 
         if ($existingCheckin) {
@@ -199,7 +199,7 @@ class KioskController extends Controller
             'queue_type' => $queueType,
             'triage_reason' => $request->reason,
             'is_walk_in' => (!$appointment || $request->is_walk_in),
-            'status' => 'waiting',
+            'checkin_status' => 'confirmed',
             'check_in_time' => now(),
         ]);
 
@@ -226,14 +226,14 @@ class KioskController extends Controller
     {
         $queue = AppointmentCheckin::with('user')
             ->whereDate('created_at', now())
-            ->where('status', '!=', 'completed')
+            ->where('checkin_status', '!=', 'completed')
             ->orderByRaw("CASE WHEN queue_type = 'priority' THEN 0 ELSE 1 END")
             ->orderBy('check_in_time')
             ->get();
 
         $nowServing = AppointmentCheckin::with('user')
             ->whereDate('created_at', now())
-            ->where('status', 'serving')
+            ->where('checkin_status', 'confirmed')
             ->first();
 
         return response()->json([
@@ -241,7 +241,7 @@ class KioskController extends Controller
             'data' => [
                 'now_serving' => $nowServing,
                 'queue' => $queue,
-                'total_waiting' => $queue->where('status', 'waiting')->count(),
+                'total_waiting' => $queue->where('checkin_status', 'confirmed')->count(),
             ]
         ]);
     }
@@ -253,19 +253,19 @@ class KioskController extends Controller
     {
         // Mark current serving as completed
         AppointmentCheckin::whereDate('created_at', now())
-            ->where('status', 'serving')
-            ->update(['status' => 'completed']);
+            ->where('checkin_status', 'confirmed')
+            ->update(['checkin_status' => 'completed']);
 
         // Get next in queue (priority first)
         $next = AppointmentCheckin::with('user')
             ->whereDate('created_at', now())
-            ->where('status', 'waiting')
+            ->where('checkin_status', 'confirmed')
             ->orderByRaw("CASE WHEN queue_type = 'priority' THEN 0 ELSE 1 END")
             ->orderBy('check_in_time')
             ->first();
 
         if ($next) {
-            $next->update(['status' => 'serving']);
+            $next->update(['checkin_status' => 'completed']);
             return response()->json([
                 'success' => true,
                 'data' => $next->load('user')
