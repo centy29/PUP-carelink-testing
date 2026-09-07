@@ -222,10 +222,20 @@ const getYellowHealthResponse = (input) => {
   for (const [condition, data] of Object.entries(YELLOW_HEALTH_RESPONSES)) {
     const isMatch = data.keywords.some(keyword => lower.includes(keyword));
     if (isMatch) {
-      return data.response;
+      // Append booking prompt with authentication-aware link
+      const bookingPrompt = getBookingPrompt();
+      return data.response + bookingPrompt;
     }
   }
   return null;
+};
+
+// Generate booking prompt with authentication-aware link
+const getBookingPrompt = () => {
+  const link = getBookingLink();
+  const isAuth = isUserAuthenticated();
+  const label = isAuth ? 'Book a Clinic Appointment' : 'Login to Book Appointment';
+  return `\n\nWould you like to book a clinic appointment?\n\n[${label}](${link})`;
 };
 
 // Check if input contains yellow health keywords
@@ -430,6 +440,42 @@ Kung malubha ang sintomas o may kasamang mga serious symptoms tulad ng difficult
 Disclaimer: Ang CareLink AI Health Assistant ay HINDI prescribing system. Hindi ito nagdi-diagnose, nagpre-prescribe, o nagrerekomenda ng specific na gamot. Palaging kumonsulta sa healthcare professional para sa tamang medical advice.`;
 };
 
+// ============================================================
+// CARELINK CLINIC INTEGRATION (PHASE 5)
+// ============================================================
+// Connect Health Assistant with existing CareLink appointment system
+// Reuses existing appointment functionality - no duplicate module created
+
+const isUserAuthenticated = () => {
+  return !!localStorage.getItem('token');
+};
+
+const getUserType = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return user.role || null;
+};
+
+const getBookingLink = () => {
+  if (isUserAuthenticated()) {
+    const userType = getUserType();
+    if (userType === 'student') {
+      return '/student/appointments';
+    } else if (userType === 'nurse' || userType === 'admin') {
+      return '/nurse/appointments';
+    }
+  }
+  return '/login';
+};
+
+const BOOKING_PROMPT = "\n\nWould you like to book a clinic appointment?\n\n[Book a Clinic Appointment]";
+
+const getBookingButtonHtml = () => {
+  const link = getBookingLink();
+  const isAuth = isUserAuthenticated();
+  const label = isAuth ? 'Book a Clinic Appointment' : 'Login to Book Appointment';
+  return `\n\n${label}: ${link}`;
+};
+
 // Keyword matching for AI-like responses
 const getAIResponse = (input) => {
   const lower = input.toLowerCase().trim();
@@ -568,7 +614,9 @@ const Chatbot = ({ userType = 'student' }) => {
   const handleKeyPress = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
   const formatTime = (date) => date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const formatMessage = (text) => text.split('\n').map((line, i) => {
-    const formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Handle markdown links: [Label](URL) -> <a href="URL">Label</a>
+    formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-maroon-600 underline font-semibold hover:text-maroon-800" target="_self">$1</a>');
     return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} className="block" />;
   });
 
