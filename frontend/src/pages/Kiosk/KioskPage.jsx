@@ -5,6 +5,7 @@ import KioskOptions from './KioskOptions';
 import KioskScan from './KioskScan';
 import KioskConfirm from './KioskConfirm';
 import KioskQueue from './KioskQueue';
+import Chatbot from '../../components/Chatbot';
 
 const KioskPage = () => {
   const [step, setStep] = useState('welcome');
@@ -52,6 +53,9 @@ const KioskPage = () => {
       {step === 'scan' && <KioskScan onStudentFound={handleStudentFound} onBack={handleBack} method={scanMethod} />}
       {step === 'confirm' && studentData && <KioskConfirm data={studentData} onCheckedIn={handleCheckedIn} onBack={handleBack} />}
       {step === 'queue' && checkinData && <KioskQueue checkin={checkinData} onDone={handleDone} />}
+
+      {/* AI Chatbot */}
+      <Chatbot userType="kiosk" />
     </>
   );
 };

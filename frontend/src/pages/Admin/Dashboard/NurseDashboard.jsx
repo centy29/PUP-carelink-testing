@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Clock, ClipboardList, QrCode, FileText, Bell, Activity, Stethoscope, Loader2 } from 'lucide-react';
 import api from '../../../services/api';
+import Chatbot from '../../../components/Chatbot';
 
 const NurseDashboard = () => {
   const navigate = useNavigate();
@@ -167,6 +168,9 @@ const NurseDashboard = () => {
   return (
     <div className="space-y-5">
       
+      {/* AI Chatbot */}
+      <Chatbot userType="nurse" />
+
       {/* Welcome Card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-br from-maroon-800 to-maroon-900 dark:from-maroon-900 dark:to-maroon-950 rounded-3xl p-5 lg:p-6 text-white shadow-xl shadow-maroon-800/20">

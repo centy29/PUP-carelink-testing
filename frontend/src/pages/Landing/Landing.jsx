@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import puplogo from '../../assets/puplogo.png';
 import pupbg from '../../assets/pupbg.jpg';
+import Chatbot from '../../components/Chatbot';
 
 const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -381,6 +382,9 @@ const Landing = () => {
       {/* ============================================ */}
       {/* FOOTER                                       */}
       {/* ============================================ */}
+      {/* AI Chatbot */}
+      <Chatbot userType="public" />
+
       <footer className="bg-gray-950 py-16 lg:py-20 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           <div className="sm:col-span-2 lg:col-span-1">

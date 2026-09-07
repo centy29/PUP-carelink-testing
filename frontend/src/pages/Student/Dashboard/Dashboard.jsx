@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, ClipboardList, FileText, Clock, Bell, ChevronRight, Activity, Heart, QrCode, User, AlertCircle, CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import api from '../../../services/api';
+import Chatbot from '../../../components/Chatbot';
 
 const Skeleton = ({ className = '' }) => (
   <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded-2xl ${className}`} />
@@ -246,6 +247,9 @@ const Dashboard = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto space-y-5 pb-6">
       
+      {/* AI Chatbot */}
+      <Chatbot userType="student" />
+
       {/* Welcome Card */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-br from-maroon-800 to-maroon-900 dark:from-maroon-900 dark:to-maroon-950 rounded-3xl p-5 lg:p-6 text-white shadow-xl shadow-maroon-800/20">
