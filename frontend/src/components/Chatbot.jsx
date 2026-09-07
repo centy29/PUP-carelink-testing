@@ -51,12 +51,124 @@ const FAQ_DATA = [
       { q: 'How do I get appointment updates?', a: "You will receive notifications for appointment confirmations, reminders, and updates. Check the Alerts section." },
       { q: 'What are announcements?', a: 'Announcements are important updates from the clinic about schedules, health advisories, and events.' }
     ]
+  },
+  {
+    category: 'Health & Wellness',
+    questions: [
+      { q: 'What is the Health Assistant?', a: 'The Health Assistant provides general wellness guidance for common mild symptoms. It does not replace professional medical advice. Always consult the clinic for persistent or severe symptoms.' },
+      { q: 'When should I visit the clinic?', a: 'Visit the clinic if symptoms worsen, persist beyond a few days, or if you experience severe pain, difficulty breathing, high fever, or any other concerning symptoms.' },
+      { q: 'Can the chatbot diagnose me?', a: 'No. The chatbot only provides general wellness information. It cannot diagnose conditions or prescribe medication. Always consult a healthcare professional for proper evaluation.' }
+    ]
   }
 ];
+
+// ============================================================
+// HEALTH ASSISTANT — GREEN / LOW-URGENCY CASES (PHASE 1)
+// ============================================================
+const HEALTH_RESPONSES = {
+  headache: {
+    keywords: ['headache', 'sakit ulo', 'sakit ng ulo', 'masakit ulo', 'masakit ang ulo', 'head pain', 'ulanging', 'migraine'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang sakit ng ulo?\n- Mild, moderate, o severe ba ang sakit?\n- Nakainom ka ba ng sapat na tubig?\n- Nakakain ka ba nang maayos?\n- Nakapagpahinga o nakatulog ka ba nang sapat?\n- May fever, pagsusuka, panghihina, pamamanhid, panlalabo ng paningin, confusion, o hirap magsalita ba?",
+    mild: "Based on your description, your headache appears to be mild.\n\nPossible causes may include:\n- Lack of sleep or fatigue\n- Dehydration\n- Eye strain from screen use\n- Stress or tension\n- Skipping meals\n\nGeneral self-care you can try:\n- Rest in a quiet, dimly lit environment\n- Drink adequate water or fluids\n- Eat a proper meal if you haven't eaten\n- Reduce screen time and take breaks\n- Get adequate rest and sleep\n\nThings to monitor:\n- If the headache worsens or becomes severe\n- If it persists beyond 24-48 hours\n- If accompanied by fever, vomiting, or vision changes\n\nVisit the clinic if:\n- The headache becomes severe or unbearable\n- It is accompanied by high fever, stiff neck, confusion, or vision changes\n- It does not improve with rest and hydration\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  cold: {
+    keywords: ['cold', 'sipon', 'runny nose', 'nose drip', 'baradong ilong', 'clogged nose', 'congestion', 'congested', 'trangkaso'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang sipon?\n- May kasamang fever, ubo, o sakit ng lalamunan ba?\n- Nakakain at nakainom ka ba nang maayos?\n- Nakapagpahinga ka ba nang sapat?",
+    mild: "Based on your description, your symptoms appear to be mild.\n\nPossible causes may include:\n- Common viral infection\n- Exposure to cold weather or allergens\n- Fatigue or weakened immunity\n\nGeneral self-care you can try:\n- Drink plenty of warm fluids (water, tea, soup)\n- Get adequate rest and sleep\n- Keep yourself warm\n- Eat nutritious foods to support your immune system\n- Gargle with warm salt water if you have a sore throat\n\nThings to monitor:\n- If fever develops or worsens\n- If symptoms persist beyond 7-10 days\n- If you experience difficulty breathing\n\nVisit the clinic if:\n- You develop high fever (above 38.5°C)\n- Symptoms worsen or do not improve after a week\n- You experience difficulty breathing or chest pain\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  cough: {
+    keywords: ['cough', 'ubo', 'nag-uubo', 'ubo-ubo', 'dry cough', 'wet cough', 'productive cough'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang ubo?\n- May plema o walang plema?\n- May kasamang fever, sipon, o hirang huminga ba?\n- Nakainom ka ba ng sapat na tubig?",
+    mild: "Based on your description, your cough appears to be mild.\n\nPossible causes may include:\n- Common cold or post-nasal drip\n- Dry air or irritation\n- Mild throat irritation\n- Allergies\n\nGeneral self-care you can try:\n- Drink plenty of warm fluids\n- Avoid cold drinks and irritants (smoke, dust)\n- Get adequate rest\n- Use a humidifier if available\n- Honey (if not diabetic) may help soothe the throat\n\nThings to monitor:\n- If cough persists beyond 2-3 weeks\n- If you develop fever or difficulty breathing\n- If you cough up blood\n\nVisit the clinic if:\n- The cough lasts more than 3 weeks\n- You develop high fever or difficulty breathing\n- You cough up blood or experience chest pain\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  soreThroat: {
+    keywords: ['sore throat', 'sakit lalamunan', 'sakit ng lalamunan', 'masakit lalamunan', 'hirap lumunom', 'painful swallowing', 'lalamunan'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang sakit ng lalamunan?\n- May kasamang fever, ubo, o sipon ba?\n- Nakakain at nakakainom ka ba nang maayos?\n- May pamamaga ng glands sa leeg ba?",
+    mild: "Based on your description, your sore throat appears to be mild.\n\nPossible causes may include:\n- Common viral infection\n- Dry air or irritation\n- Post-nasal drip\n- Mild bacterial infection\n\nGeneral self-care you can try:\n- Gargle with warm salt water several times a day\n- Drink warm fluids (tea with honey, warm water)\n- Avoid cold drinks and irritants\n- Get adequate rest\n- Suck on throat lozenges if available\n\nThings to monitor:\n- If pain worsens or makes swallowing impossible\n- If high fever develops\n- If white patches appear on the tonsils\n\nVisit the clinic if:\n- The pain becomes severe or prevents eating/drinking\n- You develop high fever\n- Symptoms persist beyond 5-7 days\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  fatigue: {
+    keywords: ['fatigue', 'pagod', 'sobrang pagod', 'tired', 'pagod na pagod', 'walang energy', 'low energy', 'lacking energy', 'panghihina', 'weak'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang pakiramdam ng pagod?\n- Nakatulog ka ba nang sapat (7-8 hours)?\n- Nakakain ka ba nang maayos at regular?\n- May kasamang ibang sintomas ba tulad ng fever o pananakit?",
+    mild: "Based on your description, your fatigue appears to be mild.\n\nPossible causes may include:\n- Lack of adequate sleep\n- Poor nutrition or skipping meals\n- Stress or mental fatigue\n- Dehydration\n- Prolonged screen time\n\nGeneral self-care you can try:\n- Get 7-9 hours of quality sleep\n- Eat regular, balanced meals\n- Stay hydrated throughout the day\n- Take short breaks from studying or screen time\n- Engage in light physical activity (short walk)\n\nThings to monitor:\n- If fatigue persists despite adequate rest\n- If accompanied by fever, weight loss, or other symptoms\n- If it significantly affects your daily activities\n\nVisit the clinic if:\n- Fatigue persists beyond 2 weeks despite rest\n- You experience unexplained weight loss\n- You have other concerning symptoms like fever or dizziness\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  eyeStrain: {
+    keywords: ['eye strain', 'sakit mata', 'sakit ng mata', 'masakit mata', 'pagod mata', 'tired eyes', 'blurry vision', 'panlalabo', 'dry eyes', 'mata'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang sakit o pagod ng mata?\n- Ilang oras ka nang nagscscreen?\n- May panlalabo, pagpula, o pagtatae ng mata ba?\n- Nakapagpahinga ka ba nang mula sa screen?",
+    mild: "Based on your description, your eye strain appears to be mild.\n\nPossible causes may include:\n- Prolonged screen time\n- Poor lighting while studying\n- Inadequate blinking\n- Uncorrected vision problems\n- Dry environment\n\nGeneral self-care you can try:\n- Follow the 20-20-20 rule: Every 20 minutes, look at something 20 feet away for 20 seconds\n- Adjust screen brightness and position\n- Use proper lighting when studying\n- Blink frequently to keep eyes moist\n- Take regular breaks from screens\n- Apply warm compress if eyes feel tired\n\nThings to monitor:\n- If vision changes persist or worsen\n- If you experience eye pain, redness, or discharge\n- If headaches accompany the eye strain\n\nVisit the clinic if:\n- Vision changes persist or worsen\n- You experience severe eye pain or redness\n- You notice discharge from the eyes\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  musclePain: {
+    keywords: ['muscle pain', 'sakit kalamnan', 'sakit ng kalamnan', 'masakit kalamnan', 'body pain', 'pananakit ng katawan', 'muscle ache', 'aching muscles', 'masakit katawan'],
+    followUp: "To help you better, please tell me:\n- Aling bahagi ng katawan ang masakit?\n- Gaano na katagal ang sakit?\n- May naunang physical activity o exercise ba?\n- May pamamaga, panghihina, o ibang kasamang sintomas ba?",
+    mild: "Based on your description, your muscle pain appears to be mild.\n\nPossible causes may include:\n- Overuse or strenuous activity\n- Poor posture during study or sleep\n- Dehydration\n- Stress or tension\n- Lack of stretching\n\nGeneral self-care you can try:\n- Rest the affected muscle\n- Apply warm or cold compress as needed\n- Gentle stretching if not too painful\n- Stay hydrated\n- Maintain good posture while studying\n\nThings to monitor:\n- If pain worsens or spreads\n- If swelling or redness develops\n- If you experience weakness or numbness\n\nVisit the clinic if:\n- The pain becomes severe or unbearable\n- You notice significant swelling or bruising\n- You cannot move the affected area\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  backPain: {
+    keywords: ['back pain', 'sikat likod', 'sakit ng likod', 'masakit likod', 'lower back', 'upper back', 'likod'],
+    followUp: "To help you better, please tell me:\n- Aling bahagi ng likod ang masakit (itaas o ibaba)?\n- Gaano na katagal ang sakit?\n- May naunang physical activity o pagbuhat ng mabigat ba?\n- Nakapagpahinga ka ba nang maayos?",
+    mild: "Based on your description, your back pain appears to be mild.\n\nPossible causes may include:\n- Poor posture while sitting or studying\n- Prolonged sitting without breaks\n- Muscle strain from activity\n- Carrying heavy bags\n- Inadequate sleep or rest\n\nGeneral self-care you can try:\n- Maintain proper posture while sitting\n- Take breaks and stretch every 30-60 minutes\n- Apply warm compress to the affected area\n- Avoid heavy lifting\n- Sleep on a firm, comfortable surface\n- Gentle stretching exercises\n\nThings to monitor:\n- If pain radiates to the legs\n- If you experience numbness or tingling\n- If pain worsens with movement\n\nVisit the clinic if:\n- The pain becomes severe or radiates to other areas\n- You experience numbness, tingling, or weakness\n- The pain persists beyond 1-2 weeks\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  bruise: {
+    keywords: ['bruise', 'pasa', 'may pasa', 'pasa sa katawan', 'bruising', 'black and blue', 'pangitim-itim'],
+    followUp: "To help you better, please tell me:\n- Saan bahagi ng katawan ang pasa?\n- Paano ito nangyari (nadama mo ba ang pagkabangga)?\n- Gaano kalaki ang pasa?\n- May ibang sintomas ba tulad ng pamamaga o matinding sakit?",
+    mild: "Based on your description, your bruise appears to be minor.\n\nPossible causes may include:\n- Minor bump or impact\n- Pressure on the skin\n- Minor injury during activity\n\nGeneral self-care you can try:\n- Apply cold compress for the first 24-48 hours (15-20 minutes at a time)\n- After 48 hours, switch to warm compress to promote healing\n- Rest the affected area\n- Elevate the bruised area if possible\n\nThings to monitor:\n- If the bruise grows significantly in size\n- If pain worsens instead of improving\n- If you develop bruises without known cause\n\nVisit the clinic if:\n- The bruise is very large or very painful\n- You develop bruises frequently without known cause\n- You experience swelling that does not improve\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  menstrualCramps: {
+    keywords: ['menstrual cramps', 'dysmenorrhea', 'sakit ng tiyan', 'cramps', 'menstruation', 'period', 'regla', 'sakit sa baba', 'monthly period', 'panregla'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang cramps?\n- Mild, moderate, o severe ba ang sakit?\n- Normal ba ang iyong menstrual flow?\n- May ibang kasamang sintomas ba tulad ng sobrang pagod o pagkahilo?",
+    mild: "Based on your description, your menstrual cramps appear to be mild.\n\nPossible causes may include:\n- Normal uterine contractions during menstruation\n- Hormonal changes\n- Stress or fatigue\n\nGeneral self-care you can try:\n- Apply warm compress to the lower abdomen\n- Gentle stretching or light exercise\n- Stay hydrated\n- Get adequate rest\n- Avoid caffeine and salty foods\n- Gentle abdominal massage\n\nThings to monitor:\n- If pain becomes severe and unmanageable\n- If bleeding is unusually heavy\n- If you experience fever or other concerning symptoms\n\nVisit the clinic if:\n- The pain becomes severe and does not improve\n- You experience unusually heavy bleeding\n- You have fever or other concerning symptoms\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  minorCuts: {
+    keywords: ['cut', 'hiwa', 'may hiwa', 'hiwa sa balat', 'minor cut', 'small cut', 'scratch', 'gasgas', 'galos', 'sugat'],
+    followUp: "To help you better, please tell me:\n- Saan bahagi ng katawan ang sugat?\n- Gaano kalalim o kalaki ang sugat?\n- Tumutulo pa ba ang dugo o tumigil na?\n- Paano ito nangyari?",
+    mild: "Based on your description, your cut appears to be minor.\n\nGeneral self-care you can try:\n- Wash your hands before handling the wound\n- Clean the wound gently with clean water\n- Apply gentle pressure with a clean cloth to stop any bleeding\n- Apply antiseptic if available\n- Cover with a clean bandage or dressing\n- Change the bandage daily or when wet/dirty\n\nThings to monitor:\n- If bleeding does not stop after 10 minutes of pressure\n- If signs of infection appear (redness, swelling, pus, warmth)\n- If the wound opens up or worsens\n\nVisit the clinic if:\n- The cut is deep or gaping\n- Bleeding does not stop with pressure\n- You see signs of infection\n- The wound was caused by a dirty or rusty object\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  nosebleed: {
+    keywords: ['nosebleed', 'pagdugo ng ilong', 'bleeding nose', 'dugo sa ilong', 'nose bleed', 'pagdurugo ng ilong'],
+    followUp: "To help you better, please tell me:\n- Tumigil na ba ang pagdugo?\n- Gaano katagal bago ito tumigil?\n- Madalas ba itong mangyari?\n- May kasamang ibang sintomas ba?",
+    mild: "Based on your description, your nosebleed appears to have stopped and is likely minor.\n\nGeneral self-care for future nosebleeds:\n- Sit upright and lean slightly forward\n- Pinch the soft part of the nose for 10-15 minutes\n- Breathe through your mouth\n- Apply cold compress to the bridge of the nose\n- Avoid blowing your nose for several hours\n- Keep your head elevated\n\nThings to monitor:\n- If nosebleeds become frequent\n- If bleeding lasts longer than 20 minutes\n- If accompanied by dizziness or weakness\n\nVisit the clinic if:\n- Bleeding does not stop after 20 minutes of pressure\n- Nosebleeds occur frequently\n- You feel dizzy, weak, or faint\n- The nosebleed follows a head injury\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  nausea: {
+    keywords: ['nausea', 'nauseous', 'pagkahilo', 'hilo', 'naghihiwalay', 'sick to stomach', 'ayaw kain', 'walang gana', 'nagsusuka', 'vomiting', 'suka'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang pakiramdam ng nausea?\n- Nakakain ka ba nang maayos?\n- Nakainom ka ba ng sapat na tubig?\n- May kasamang fever, pananakit ng tiyan, o pagtatae ba?",
+    mild: "Based on your description, your nausea appears to be mild.\n\nPossible causes may include:\n- Motion sickness\n- Food-related issues\n- Stress or anxiety\n- Fatigue\n- Mild stomach upset\n\nGeneral self-care you can try:\n- Sip small amounts of water or clear fluids\n- Eat small, bland meals (crackers, toast, rice)\n- Avoid greasy, spicy, or strong-smelling foods\n- Get fresh air\n- Rest in a comfortable position\n- Avoid lying down immediately after eating\n\nThings to monitor:\n- If nausea persists beyond 24 hours\n- If you cannot keep fluids down\n- If you develop severe abdominal pain\n- If signs of dehydration appear\n\nVisit the clinic if:\n- Nausea persists beyond 24-48 hours\n- You cannot keep any fluids down\n- You experience severe abdominal pain\n- You show signs of dehydration\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  },
+  diarrhea: {
+    keywords: ['diarrhea', 'pagtatae', 'nagtatae', 'loose bowel', 'frequent bowel', 'watery stool', 'stomach upset', 'tiyan'],
+    followUp: "To help you better, please tell me:\n- Gaano na katagal ang pagtatae?\n- Ilang beses ka nang dumudumi sa isang araw?\n- Nakainom ka ba ng sapat na tubig?\n- May kasamang fever, matinding pananakit ng tiyan, o dugo sa dumi ba?",
+    mild: "Based on your description, your diarrhea appears to be mild.\n\nPossible causes may include:\n- Food-related issues\n- Mild infection\n- Stress or anxiety\n- Dietary changes\n\nGeneral self-care you can try:\n- Drink plenty of fluids (water, oral rehydration solution, clear broth)\n- Eat bland, easy-to-digest foods (BRAT diet: bananas, rice, applesauce, toast)\n- Avoid dairy, fatty, and spicy foods\n- Get adequate rest\n- Maintain good hygiene (handwashing)\n\nThings to monitor:\n- If diarrhea persists beyond 2-3 days\n- If you develop signs of dehydration (dry mouth, dizziness, decreased urination)\n- If you have high fever or blood in stool\n\nVisit the clinic if:\n- Diarrhea persists beyond 3 days\n- You show signs of dehydration\n- You have high fever or blood in stool\n- You experience severe abdominal pain\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice. Always consult a healthcare provider for persistent or severe symptoms."
+  }
+};
+
+// Health keyword detection - returns follow-up questions for mild cases
+const getHealthResponse = (input) => {
+  const lower = input.toLowerCase().trim();
+  for (const [condition, data] of Object.entries(HEALTH_RESPONSES)) {
+    const isMatch = data.keywords.some(keyword => lower.includes(keyword));
+    if (isMatch) {
+      return data.followUp;
+    }
+  }
+  return null;
+};
+
+// Check if input contains health-related keywords
+const isHealthQuery = (input) => {
+  const lower = input.toLowerCase().trim();
+  return Object.values(HEALTH_RESPONSES).some(data =>
+    data.keywords.some(keyword => lower.includes(keyword))
+  );
+};
 
 // Keyword matching for AI-like responses
 const getAIResponse = (input) => {
   const lower = input.toLowerCase().trim();
+
+  // Check for health-related queries first (GREEN cases)
+  if (isHealthQuery(lower)) {
+    const healthResponse = getHealthResponse(lower);
+    if (healthResponse) {
+      return healthResponse;
+    }
+  }
 
   if (/^(hi|hello|hey|good\s*(morning|afternoon|evening)|sup|yo)/i.test(lower)) {
     return "Hello! I am CareLink Assistant. How can I help you today? You can ask me about appointments, QR codes, health records, or any other feature!";
