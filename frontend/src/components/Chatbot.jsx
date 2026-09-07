@@ -236,15 +236,105 @@ const isYellowHealthQuery = (input) => {
   );
 };
 
+// ============================================================
+// RED / URGENT MEDICAL ATTENTION CASES (PHASE 3)
+// ============================================================
+const RED_HEALTH_FLAGS = {
+  difficultyBreathing: {
+    keywords: ['difficulty breathing', 'hirap huminga', 'shortness of breath', 'hindi makahinga', 'hininga', 'gasping', 'sarado ang ilong at hirap huminga', 'wheezing', 'pagod huminga'],
+    response: "URGENT: Based on the information provided, difficulty breathing may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  severeChestPain: {
+    keywords: ['severe chest pain', 'matinding sakit dibdib', 'chest pain', 'sakit dibdib', 'tightness in chest', 'pressure in chest', 'squeezing chest pain', 'radiating arm pain'],
+    response: "URGENT: Based on the information provided, severe chest pain may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  lossOfConsciousness: {
+    keywords: ['loss of consciousness', 'nawala malay', 'nawalan ng malay', 'fainted', 'nanghihimatay', 'collapsed', 'hindi naalala', 'blackout', 'nawawalan ng malay'],
+    response: "URGENT: Based on the information provided, loss of consciousness may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  seizure: {
+    keywords: ['seizure', 'kombulsyon', 'nagkakakombulsyon', 'convulsion', 'nangangatal', 'staring spell', 'uncontrolled shaking', 'nanginginig nang hindi mapigilan'],
+    response: "URGENT: Based on the information provided, seizure activity may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  suddenSevereHeadache: {
+    keywords: ['sudden severe headache', 'biglang sobrang sakit ulo', 'thunderclap headache', 'worst headache of my life', 'sobrang sakit ulo', 'matinding sakit ulo', 'sudden worst headache'],
+    response: "URGENT: Based on the information provided, a sudden severe headache may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  weaknessOrNumbness: {
+    keywords: ['weakness', 'panghihina', 'numbness', 'pamamanhid', 'cannot move', 'hindi makagalaw', 'one side of body', 'kalahati ng katawan', 'drooping face', 'nangiwi na mukha', 'facial droop'],
+    response: "URGENT: Based on the information provided, new weakness or numbness may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  difficultySpeaking: {
+    keywords: ['difficulty speaking', 'hirap magsalita', 'slurred speech', 'hindi malinang na pagsasalita', 'cannot speak', 'hindi makapagsalita', 'mouth drooping', 'nangiwi ang bibig'],
+    response: "URGENT: Based on the information provided, difficulty speaking may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  severeConfusion: {
+    keywords: ['severe confusion', 'malabong pag-iisip', 'confused', 'nalilito', 'disoriented', 'hindi alam kungasaan', 'not making sense', 'hindi maintindihan', 'bizarre behavior', 'kakaugaliang pag-uugali'],
+    response: "URGENT: Based on the information provided, severe confusion may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  visionChanges: {
+    keywords: ['vision changes', 'pagbabago sa paningin', 'vision loss', 'panlalabo', 'blindness', 'bulag', 'double vision', 'dobleng paningin', 'flashing lights', 'may nakikita na flashing', 'curtain over vision'],
+    response: "URGENT: Based on the information provided, sudden vision changes may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  allergicReaction: {
+    keywords: ['allergic reaction', 'allergy', 'allergic', 'anaphylaxis', 'swelling of face', 'namamaga ang mukha', 'swollen tongue', 'namamaga ang dila', 'throat swelling', 'namamaga ang lalamunan', 'hives', 'pamamantal', 'severe itching', 'sobrang pagkakati', 'after eating', 'after medication'],
+    response: "URGENT: Based on the information provided, severe allergic reaction symptoms may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  severeBleeding: {
+    keywords: ['severe bleeding', 'matinding pagdurugo', 'uncontrolled bleeding', 'hindi tumitil na pagdurugo', 'bleeding wont stop', 'dumudugo nang marami', 'blood everywhere', 'maraming dugo', 'spurting blood'],
+    response: "URGENT: Based on the information provided, severe or uncontrolled bleeding may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Apply direct pressure to the wound while waiting for help\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  headInjury: {
+    keywords: ['head injury', 'sakit sa ulo', 'hit head', 'nadapa', 'fell and hit head', 'head trauma', 'head bang', 'bumangga ang ulo', 'concussion', 'concussion symptoms'],
+    response: "URGENT: Based on the information provided, a serious head injury may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  severeDehydration: {
+    keywords: ['severe dehydration', 'matinding dehydration', 'very dry mouth', 'sobrang tuyong bibig', 'no urine', 'hindi umihi', 'dark urine', 'maduming ihi', 'dizzy when standing', 'nahihihilo pagtayo', 'sunken eyes', 'umbok na mata', 'lethargic', 'walang enerhiya'],
+    response: "URGENT: Based on the information provided, severe dehydration may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  severeAbdominalPain: {
+    keywords: ['severe abdominal pain', 'matinding sakit tiyan', 'rigid abdomen', 'matigas na tiyan', 'abdominal pain with fever', 'sakit tiyan na may lagnat', 'abdominal pain with vomiting', 'sakit tiyan na may pagsusuka', 'cannot stand straight', 'hindi tuwid sa sobrang sakit'],
+    response: "URGENT: Based on the information provided, severe abdominal pain may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  seriousBurns: {
+    keywords: ['serious burn', 'severe burn', 'sunburn', 'napaso', 'napaso sa init', 'burn injury', 'blisters from burn', 'pula at namamaga', 'charred skin', 'itim na balat', 'large burn', 'malaking paso'],
+    response: "URGENT: Based on the information provided, serious burns may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  },
+  majorInjury: {
+    keywords: ['major injury', 'serious injury', 'malubhang pinsala', 'broken bone', 'buto', 'fracture', 'nakaladkad buto', 'deformity', 'nakurot', 'bone sticking out', 'buto na nakalabas', 'deep wound', 'malalim na sugat', 'amputation', 'naputol'],
+    response: "URGENT: Based on the information provided, major injuries may require immediate medical attention.\n\nPlease seek immediate medical care or emergency assistance.\n\n- Go to the nearest emergency room or call emergency services\n- Do not wait for symptoms to improve on their own\n- Do not rely on the CareLink AI Health Assistant to manage an emergency\n\nIf you are on campus, proceed immediately to the clinic or ask someone to help you get emergency care.\n\nDisclaimer: This is not a substitute for professional medical advice. In emergencies, always seek immediate medical attention."
+  }
+};
+
+// Red flag detection - highest priority
+const getRedFlagResponse = (input) => {
+  const lower = input.toLowerCase().trim();
+  for (const [condition, data] of Object.entries(RED_HEALTH_FLAGS)) {
+    const isMatch = data.keywords.some(keyword => lower.includes(keyword));
+    if (isMatch) {
+      return data.response;
+    }
+  }
+  return null;
+};
+
+// Check if input contains red flag keywords
+const isRedFlagQuery = (input) => {
+  const lower = input.toLowerCase().trim();
+  return Object.values(RED_HEALTH_FLAGS).some(data =>
+    data.keywords.some(keyword => lower.includes(keyword))
+  );
+};
+
 // Keyword matching for AI-like responses
 const getAIResponse = (input) => {
   const lower = input.toLowerCase().trim();
 
-  // Check for health-related queries first (GREEN cases)
-  if (isHealthQuery(lower)) {
-    const healthResponse = getHealthResponse(lower);
-    if (healthResponse) {
-      return healthResponse;
+  // Check for RED flags first (highest priority - overrides Yellow and Green)
+  if (isRedFlagQuery(lower)) {
+    const redResponse = getRedFlagResponse(lower);
+    if (redResponse) {
+      return redResponse;
     }
   }
 
@@ -253,6 +343,14 @@ const getAIResponse = (input) => {
     const yellowResponse = getYellowHealthResponse(lower);
     if (yellowResponse) {
       return yellowResponse;
+    }
+  }
+
+  // Check for health-related queries (GREEN cases)
+  if (isHealthQuery(lower)) {
+    const healthResponse = getHealthResponse(lower);
+    if (healthResponse) {
+      return healthResponse;
     }
   }
 
