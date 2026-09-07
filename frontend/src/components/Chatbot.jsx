@@ -158,6 +158,84 @@ const isHealthQuery = (input) => {
   );
 };
 
+// ============================================================
+// YELLOW / CLINIC CONSULTATION CASES (PHASE 2)
+// ============================================================
+const YELLOW_HEALTH_RESPONSES = {
+  persistentHeadache: {
+    keywords: ['persistent headache', 'recurrent headache', 'headache wont go', 'headache not going away', 'chronic headache', 'headache days', 'headache weeks', 'uloy na sakit ulo', 'pabalik-balik na sakit ulo'],
+    response: "Based on the information you provided, your headache has persisted and would be better evaluated by a healthcare professional.\n\nPersistent headaches may have various causes that require proper assessment. While waiting for your appointment, you may:\n- Keep a headache diary noting when they occur and what you were doing\n- Stay hydrated and maintain regular meals\n- Get adequate rest and sleep\n- Avoid known triggers if you have identified any\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentFever: {
+    keywords: ['persistent fever', 'fever days', 'fever wont go away', 'recurrent fever', 'chronic fever', 'lagnat days', 'lagnat weeks', 'pabalik-balik na lagnat', 'hindi bumabagsak na lagnat'],
+    response: "Based on the information you provided, your fever has persisted and would be better evaluated by a healthcare professional.\n\nPersistent fever can indicate an underlying condition that requires proper assessment. While waiting for your appointment, you may:\n- Monitor and record your temperature regularly\n- Stay hydrated by drinking plenty of fluids\n- Get adequate rest\n- Wear light, comfortable clothing\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentCough: {
+    keywords: ['persistent cough', 'chronic cough', 'cough weeks', 'cough wont stop', 'recurrent cough', 'ubo weeks', 'pabalik-balik na ubo', 'hindi tumitigil na ubo'],
+    response: "Based on the information you provided, your cough has persisted and would be better evaluated by a healthcare professional.\n\nA cough that lasts more than 2-3 weeks may require medical assessment. While waiting for your appointment, you may:\n- Stay hydrated with warm fluids\n- Avoid irritants like smoke and dust\n- Get adequate rest\n- Use a humidifier if available\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentSoreThroat: {
+    keywords: ['persistent sore throat', 'sore throat weeks', 'chronic sore throat', 'recurrent sore throat', 'sakit lalamunan weeks', 'pabalik-balik na sakit lalamunan'],
+    response: "Based on the information you provided, your sore throat has persisted and would be better evaluated by a healthcare professional.\n\nA sore throat that lasts beyond 5-7 days may require medical assessment. While waiting for your appointment, you may:\n- Gargle with warm salt water\n- Drink warm fluids\n- Avoid irritants and cold drinks\n- Get adequate rest\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  recurrentDizziness: {
+    keywords: ['recurrent dizziness', 'dizziness keeps coming back', 'repeated dizziness', 'frequent dizziness', 'pabalik-balik na pagkahilo', 'madalas pagkahilo', 'nanghihilo nang pabalik-balik'],
+    response: "Based on the information you provided, your dizziness has been recurrent and would be better evaluated by a healthcare professional.\n\nRecurrent dizziness can have various causes that require proper assessment. While waiting for your appointment, you may:\n- Avoid sudden changes in position\n- Stay hydrated\n- Get adequate rest\n- Avoid driving or operating machinery if you feel dizzy\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentAbdominalPain: {
+    keywords: ['persistent abdominal pain', 'stomach pain weeks', 'chronic stomach pain', 'recurrent stomach pain', 'abdominal pain wont go', 'sakit tiyan weeks', 'pabalik-balik na sakit tiyan', 'matinding sakit tiyan'],
+    response: "Based on the information you provided, your abdominal pain has persisted and would be better evaluated by a healthcare professional.\n\nPersistent abdominal pain can have various causes that require proper assessment. While waiting for your appointment, you may:\n- Eat small, bland meals\n- Stay hydrated\n- Avoid spicy, fatty, or gas-producing foods\n- Apply warm compress if it provides comfort\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  repeatedVomiting: {
+    keywords: ['repeated vomiting', 'vomiting keeps happening', 'frequent vomiting', 'recurrent vomiting', 'nagsusuka nang pabalik-balik', 'madalas magsuka', 'hindi tumitigil na pagsusuka'],
+    response: "Based on the information you provided, your vomiting has been repeated and would be better evaluated by a healthcare professional.\n\nRepeated vomiting can lead to dehydration and may indicate an underlying condition. While waiting for your appointment, you may:\n- Sip small amounts of clear fluids frequently\n- Avoid solid foods temporarily\n- Rest in a comfortable position\n- Monitor for signs of dehydration\n\nSeek immediate care if you cannot keep any fluids down or if you feel very weak.\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentDiarrhea: {
+    keywords: ['persistent diarrhea', 'diarrhea weeks', 'chronic diarrhea', 'recurrent diarrhea', 'diarrhea wont stop', 'pagtatae weeks', 'pabalik-balik na pagtatae', 'hindi tumitigil na pagtatae'],
+    response: "Based on the information you provided, your diarrhea has persisted and would be better evaluated by a healthcare professional.\n\nDiarrhea lasting beyond 2-3 days may require medical assessment. While waiting for your appointment, you may:\n- Drink plenty of fluids to prevent dehydration\n- Eat bland, easy-to-digest foods (BRAT diet)\n- Avoid dairy, fatty, and spicy foods\n- Maintain good hygiene\n\nSeek immediate care if you develop signs of severe dehydration.\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  severeMenstrualCramps: {
+    keywords: ['severe menstrual cramps', 'severe period pain', 'unusually severe cramps', 'menstrual cramps unbearable', 'matinding sakit regla', 'hindi matiis na sakit regla', 'sobrang sakit ng panregla'],
+    response: "Based on the information you provided, your menstrual cramps appear to be unusually severe and would be better evaluated by a healthcare professional.\n\nSevere menstrual pain that interferes with daily activities may have underlying causes that require assessment. While waiting for your appointment, you may:\n- Apply warm compress to the lower abdomen\n- Gentle stretching or light exercise\n- Stay hydrated and get adequate rest\n- Keep a symptom diary to discuss with the healthcare provider\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentToothache: {
+    keywords: ['persistent toothache', 'toothache weeks', 'tooth pain wont go', 'chronic toothache', 'recurrent toothache', 'sakit ngipin weeks', 'pabalik-balik na sakit ngipin', 'hindi tumitigil na sakit ngipin'],
+    response: "Based on the information you provided, your toothache has persisted and would be better evaluated by a healthcare professional.\n\nPersistent dental pain may indicate an underlying dental issue that requires proper treatment. While waiting for your appointment, you may:\n- Rinse with warm salt water\n- Avoid very hot or cold foods\n- Apply cold compress to the outside of your cheek if swollen\n- Maintain good oral hygiene\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  persistentBackPain: {
+    keywords: ['persistent back pain', 'back pain weeks', 'chronic back pain', 'recurrent back pain', 'worsening back pain', 'sakit likod weeks', 'pabalik-balik na sakit likod', 'lalong masakit na likod', 'hindi bumubuti na sakit likod'],
+    response: "Based on the information you provided, your back pain has persisted and would be better evaluated by a healthcare professional.\n\nPersistent back pain can have various causes that require proper assessment. While waiting for your appointment, you may:\n- Maintain good posture\n- Avoid heavy lifting\n- Apply warm or cold compress as needed\n- Gentle stretching if not too painful\n- Get adequate rest\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  woundInfection: {
+    keywords: ['wound infection', 'infected cut', 'infected wound', 'pus from wound', 'red around wound', 'swollen wound', 'sugat na naiimpeksyon', 'may nana sa sugat', 'pamamaga sa sugat', 'pula sa paligid ng sugat'],
+    response: "Based on the information you provided, your wound may be showing signs of infection and would be better evaluated by a healthcare professional.\n\nWound infections require proper medical treatment to prevent complications. While waiting for your appointment, you may:\n- Keep the wound clean and dry\n- Do not apply any medication without professional advice\n- Avoid touching or scratching the area\n- Cover with a clean bandage\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  },
+  worseningSymptoms: {
+    keywords: ['worsening symptoms', 'getting worse', 'symptoms worse', 'not getting better', 'not improving', 'lalong lumalala', 'hindi bumubuti', 'palala ng sintomas', 'worsening condition'],
+    response: "Based on the information you provided, your symptoms appear to be worsening and would be better evaluated by a healthcare professional.\n\nWorsening symptoms require proper medical assessment to determine the cause and appropriate treatment. While waiting for your appointment, you may:\n- Monitor and note any changes in your symptoms\n- Rest and avoid activities that may aggravate your condition\n- Stay hydrated and maintain proper nutrition\n\nIt is recommended to consult with the clinic for proper evaluation.\n\n[Book a Clinic Appointment]\n\nDisclaimer: This is general wellness information only and does not replace professional medical advice."
+  }
+};
+
+// Yellow keyword detection
+const getYellowHealthResponse = (input) => {
+  const lower = input.toLowerCase().trim();
+  for (const [condition, data] of Object.entries(YELLOW_HEALTH_RESPONSES)) {
+    const isMatch = data.keywords.some(keyword => lower.includes(keyword));
+    if (isMatch) {
+      return data.response;
+    }
+  }
+  return null;
+};
+
+// Check if input contains yellow health keywords
+const isYellowHealthQuery = (input) => {
+  const lower = input.toLowerCase().trim();
+  return Object.values(YELLOW_HEALTH_RESPONSES).some(data =>
+    data.keywords.some(keyword => lower.includes(keyword))
+  );
+};
+
 // Keyword matching for AI-like responses
 const getAIResponse = (input) => {
   const lower = input.toLowerCase().trim();
@@ -167,6 +245,14 @@ const getAIResponse = (input) => {
     const healthResponse = getHealthResponse(lower);
     if (healthResponse) {
       return healthResponse;
+    }
+  }
+
+  // Check for YELLOW cases (persistent/recurrent/worsening symptoms)
+  if (isYellowHealthQuery(lower)) {
+    const yellowResponse = getYellowHealthResponse(lower);
+    if (yellowResponse) {
+      return yellowResponse;
     }
   }
 
