@@ -326,6 +326,110 @@ const isRedFlagQuery = (input) => {
   );
 };
 
+// ============================================================
+// MEDICATION SAFETY (PHASE 4)
+// ============================================================
+// The CareLink AI Health Assistant is NOT a prescribing system.
+// It does NOT diagnose, prescribe, or recommend specific medications.
+
+const MEDICATION_KEYWORDS = [
+  'medicine', 'gamot', 'medication', 'pill', 'tablet', 'capsule',
+  'painkiller', 'pain reliever', 'antibiotic', 'antihistamine',
+  'what medicine', 'anong gamot', 'recommend medicine', 'prescribe',
+  ' dosage', 'dose', 'take for', 'uminom ng gamot', 'inom ng gamot',
+  'over the counter', 'otc', 'drug', 'remedy', 'treatment for'
+];
+
+const MEDICATION_CONDITION_KEYWORDS = [
+  'headache', 'sakit ulo', 'fever', 'lagnat', 'cough', 'ubo',
+  'sore throat', 'sakit lalamunan', 'stomach pain', 'sakit tiyan',
+  'allergy', 'allergic', 'cold', 'sipon', 'nausea', 'pagkahilo',
+  'diarrhea', 'pagtatae', 'pain', 'sakit', 'infection', 'impeksyon',
+  'swelling', 'pamamaga', 'rash', 'pamamantal', 'cramps', 'cramp'
+];
+
+const isMedicationQuery = (input) => {
+  const lower = input.toLowerCase().trim();
+  // Direct medication requests
+  const hasMedicationKeyword = MEDICATION_KEYWORDS.some(keyword => lower.includes(keyword));
+  // Asking for medicine for a specific condition
+  const hasConditionKeyword = MEDICATION_CONDITION_KEYWORDS.some(keyword => lower.includes(keyword));
+
+  // Check if asking for medication for a condition
+  if (hasMedicationKeyword) return true;
+  if (hasConditionKeyword && (lower.includes('what') || lower.includes('anong') || lower.includes('which') || lower.includes('alin') || lower.includes('should i take') || lower.includes('dapat kainom') || lower.includes('pwede inom'))) return true;
+
+  return false;
+};
+
+const getMedicationResponse = (input) => {
+  const lower = input.toLowerCase().trim();
+
+  // Extract the condition if mentioned
+  let condition = '';
+  const conditionKeywords = [
+    { key: 'headache', val: 'headache' },
+    { key: 'sakit ulo', val: 'headache' },
+    { key: 'fever', val: 'fever' },
+    { key: 'lagnat', val: 'fever' },
+    { key: 'cough', val: 'cough' },
+    { key: 'ubo', val: 'cough' },
+    { key: 'sore throat', val: 'sore throat' },
+    { key: 'sakit lalamunan', val: 'sore throat' },
+    { key: 'stomach pain', val: 'stomach pain' },
+    { key: 'sakit tiyan', val: 'stomach pain' },
+    { key: 'allergy', val: 'allergy' },
+    { key: 'allergic', val: 'allergy' },
+    { key: 'cold', val: 'cold' },
+    { key: 'sipon', val: 'cold' },
+    { key: 'nausea', val: 'nausea' },
+    { key: 'pagkahilo', val: 'nausea' },
+    { key: 'diarrhea', val: 'diarrhea' },
+    { key: 'pagtatae', val: 'diarrhea' },
+    { key: 'pain', val: 'pain' },
+    { key: 'sakit', val: 'pain' },
+    { key: 'infection', val: 'infection' },
+    { key: 'impeksyon', val: 'infection' },
+    { key: 'swelling', val: 'swelling' },
+    { key: 'pamamaga', val: 'swelling' },
+    { key: 'rash', val: 'skin rash' },
+    { key: 'pamamantal', val: 'skin rash' },
+    { key: 'cramps', val: 'cramps' },
+    { key: 'cramp', val: 'cramps' }
+  ];
+
+  for (const item of conditionKeywords) {
+    if (lower.includes(item.key)) {
+      condition = item.val;
+      break;
+    }
+  }
+
+  const conditionText = condition ? ` for ${condition}` : '';
+
+  return `Maraming posibleng dahilan ng${conditionText ? ' ' + condition : ' symptoms'}, kaya hindi dapat basta pumili ng gamot base lamang sa symptom. Ang pagpili ng tamang gamot ay nakadepende sa iba't ibang factors tulad ng:
+
+- Age
+- Allergies
+- Existing medical conditions
+- Current medications na iniinom
+- Pregnancy status (kung mayroon)
+- Severity ng symptoms
+- Posibleng underlying cause
+
+Kung mild ang symptoms, maaari munang magpahinga, uminom ng sapat na tubig, at magpatuloy sa normal na routine.
+
+Kung gusto mong uminom ng gamot, mas ligtas na kumonsulta muna sa healthcare professional o pharmacist, lalo na kung:
+- May allergies ka
+- May ibang iniinom na gamot
+- May existing medical condition
+- May iba pang health concerns
+
+Kung malubha ang sintomas o may kasamang mga serious symptoms tulad ng difficulty breathing, severe pain, o iba pang warning signs, seek immediate medical attention.
+
+Disclaimer: Ang CareLink AI Health Assistant ay HINDI prescribing system. Hindi ito nagdi-diagnose, nagpre-prescribe, o nagrerekomenda ng specific na gamot. Palaging kumonsulta sa healthcare professional para sa tamang medical advice.`;
+};
+
 // Keyword matching for AI-like responses
 const getAIResponse = (input) => {
   const lower = input.toLowerCase().trim();
@@ -336,6 +440,11 @@ const getAIResponse = (input) => {
     if (redResponse) {
       return redResponse;
     }
+  }
+
+  // Check for medication-related queries (safety - do not prescribe)
+  if (isMedicationQuery(lower)) {
+    return getMedicationResponse(lower);
   }
 
   // Check for YELLOW cases (persistent/recurrent/worsening symptoms)
