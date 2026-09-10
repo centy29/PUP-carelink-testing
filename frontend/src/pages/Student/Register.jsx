@@ -106,6 +106,8 @@ export default function Register() {
   };
 
   const inputClass = (field) =>
+    `w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border ${errors[field] ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 dark:focus:ring-maroon-400 focus:border-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200`;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8 relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -128,6 +130,13 @@ export default function Register() {
             <React.Fragment key={step}>
               <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all duration-300 ${currentStep >= step ? 'bg-gradient-to-r from-maroon-700 to-maroon-800 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500'}`}>
                 {step}
+              </div>
+              {step < 3 && (
+                <div className={`w-12 h-1 rounded-full transition-all duration-300 ${currentStep > step ? 'bg-gradient-to-r from-maroon-600 to-maroon-700' : 'bg-gray-200 dark:bg-gray-700'}`}></div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/50 p-8">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 p-3 rounded-xl mb-4 text-sm animate-shake">
@@ -182,6 +191,12 @@ export default function Register() {
                   </button>
                   {errors.password_confirmation && <p className="text-red-500 text-xs mt-1 ml-1">{errors.password_confirmation}</p>}
                 </div>
+                <button type="button" onClick={handleNext} className="w-full py-3 px-4 bg-gradient-to-r from-maroon-800 to-maroon-900 hover:from-maroon-900 hover:to-maroon-950 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2">
+                  <span>Next</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
             {currentStep === 2 && (
               <div className="space-y-4 animate-fadeIn">
                 <div className="text-center mb-4">
@@ -206,27 +221,44 @@ export default function Register() {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="relative">
                     <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    <input type="text" name="course" placeholder="Course (e.g., BSIT)" value={form.course} onChange={handleChange} className={`w-full pl-10 pr-2 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.course ? 'border-red-400' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 focus:border-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 transition-all duration-200`} required />
+                    <input type="text" name="course" placeholder="Course (e.g., BSIT)" value={form.course} onChange={handleChange} className={`w-full pl-10 pr-2 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.course ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 dark:focus:ring-maroon-400 focus:border-transparent text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200`} required />
                     {errors.course && <p className="text-red-500 text-xs mt-1 ml-1">{errors.course}</p>}
                   </div>
-                  <select name="year" value={form.year} onChange={handleChange} className={`w-full px-3 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.year ? 'border-red-400' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 text-gray-800 transition-all duration-200 appearance-none cursor-pointer`} required>
-                    <option value="">Year</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
-                  <input type="text" name="section" placeholder="Section" value={form.section} onChange={handleChange} className={`w-full px-3 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.section ? 'border-red-400' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 text-gray-800 placeholder-gray-400 transition-all duration-200`} required />
+                  <div>
+                    <select name="year" value={form.year} onChange={handleChange} className={`w-full px-3 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.year ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 dark:focus:ring-maroon-400 text-gray-800 dark:text-gray-100 transition-all duration-200 appearance-none cursor-pointer`} required>
+                      <option value="">Year</option>
+                      <option value="1">1st Year</option>
+                      <option value="2">2nd Year</option>
+                      <option value="3">3rd Year</option>
+                      <option value="4">4th Year</option>
+                    </select>
+                    {errors.year && <p className="text-red-500 text-xs mt-1 ml-1">{errors.year}</p>}
+                  </div>
+                  <div>
+                    <input type="text" name="section" placeholder="Section" value={form.section} onChange={handleChange} className={`w-full px-3 py-3 bg-gray-50 dark:bg-gray-700 border ${errors.section ? 'border-red-400 dark:border-red-500' : 'border-gray-200 dark:border-gray-600'} rounded-xl focus:outline-none focus:ring-2 focus:ring-maroon-500 dark:focus:ring-maroon-400 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200`} required />
+                    {errors.section && <p className="text-red-500 text-xs mt-1 ml-1">{errors.section}</p>}
+                  </div>
                 </div>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input type="tel" name="mobile_number" placeholder="Mobile Number (09171234567)" value={form.mobile_number} onChange={handleChange} maxLength={11} className={inputClass('mobile_number')} required />
                   {errors.mobile_number && <p className="text-red-500 text-xs mt-1 ml-1">{errors.mobile_number}</p>}
                 </div>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <MapPin className="absolute left-3 top-3 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <textarea name="address" placeholder="Complete Address" value={form.address} onChange={handleChange} rows={2} className={`${inputClass('address')} resize-none`} required />
                   {errors.address && <p className="text-red-500 text-xs mt-1 ml-1">{errors.address}</p>}
+                </div>
+                <div className="flex space-x-3">
+                  <button type="button" onClick={handleBack} className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center space-x-2">
+                    <ArrowLeft className="w-5 h-5" /><span>Back</span>
+                  </button>
+                  <button type="button" onClick={handleNext} className="flex-1 py-3 px-4 bg-gradient-to-r from-maroon-800 to-maroon-900 hover:from-maroon-900 hover:to-maroon-950 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2">
+                    <span>Next</span><ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
             {currentStep === 3 && (
               <div className="space-y-4 animate-fadeIn">
                 <div className="text-center mb-4">
@@ -249,7 +281,7 @@ export default function Register() {
                   </p>
                 </div>
                 <div className="flex space-x-3">
-                  <button type="button" onClick={handleBack} className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center space-x-2">
+                  <button type="button" onClick={handleBack} className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center space-x-2">
                     <ArrowLeft className="w-5 h-5" /><span>Back</span>
                   </button>
                   <button type="submit" disabled={loading} className="flex-1 py-3 px-4 bg-gradient-to-r from-maroon-800 to-maroon-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
