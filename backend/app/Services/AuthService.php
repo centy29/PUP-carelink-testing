@@ -25,7 +25,7 @@ class AuthService
     public function register(array $data): array
     {
         $user = $this->userRepository->create([
-            'student_id' => $data['student_id'],
+            'student_id' => $data['student_id'] ?? null,
             'first_name' => $data['first_name'],
             'middle_name' => $data['middle_name'] ?? null,
             'last_name' => $data['last_name'],
@@ -33,29 +33,14 @@ class AuthService
             'password' => Hash::make($data['password']),
             'role' => 'student',
             'birthday' => $data['birthday'] ?? null,
-            'gender' => isset($data['gender']) ? strtolower($data['gender']) : null,
+            'gender' => $data['gender'] ?? null,
             'course' => $data['course'] ?? null,
             'year' => $data['year'] ?? null,
             'section' => $data['section'] ?? null,
             'mobile_number' => $data['mobile_number'] ?? null,
-            // Auto-verify — no email OTP verification needed
             'email_verified_at' => now(),
             'status' => 'active',
         ]);
-
-        // Create the student profile record so course/year/section are
-        // immediately available in the dashboard and at the kiosk.
-        \App\Models\StudentProfile::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'course' => $data['course'] ?? null,
-                'year' => $data['year'] ?? null,
-                'section' => $data['section'] ?? null,
-                'birthday' => $data['birthday'] ?? null,
-                'gender' => isset($data['gender']) ? strtolower($data['gender']) : null,
-                'mobile_number' => $data['mobile_number'] ?? null,
-            ]
-        );
 
         $this->generateQRCode($user);
 

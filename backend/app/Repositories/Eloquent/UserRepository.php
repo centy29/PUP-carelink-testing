@@ -11,7 +11,7 @@ class UserRepository implements UserRepositoryInterface
     public function create(array $data): User
     {
         $user = User::create(array_merge($data, [
-            'status' => 'pending',
+            'status' => $data['status'] ?? 'pending',
         ]));
 
         // Create associated profile WITH DATA
@@ -23,6 +23,9 @@ class UserRepository implements UserRepositoryInterface
             'birthday' => $data['birthday'] ?? null,
             'gender' => $data['gender'] ?? null,
             'mobile_number' => $data['mobile_number'] ?? null,
+            'address' => $data['address'] ?? null,
+            'guardian_name' => $data['guardian_name'] ?? null,
+            'guardian_contact' => $data['guardian_contact'] ?? null,
         ]);
 
         return $user;
